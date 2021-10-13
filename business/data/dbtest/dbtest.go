@@ -2,13 +2,12 @@
 package dbtest
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
-	"io"
-	"os"
 	"testing"
 	"time"
 
@@ -20,8 +19,8 @@ import (
 	"github.com/lgarciaaco/machina-api/business/sys/database"
 	"github.com/lgarciaaco/machina-api/foundation/docker"
 	"github.com/lgarciaaco/machina-api/foundation/keystore"
-	"github.com/lgarciaaco/machina-api/foundation/logger"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // Success and failure markers.
@@ -30,24 +29,28 @@ const (
 	Failed  = "\u2717"
 )
 
-// DBContainer provides configuration for a container to run.
-type DBContainer struct {
-	Image string
-	Port  string
-	Args  []string
+// StartDB starts a database instance.
+func StartDB() (*docker.Container, error) {
+	image := "postgres:14-alpine"
+	port := "5432"
+	args := []string{"-e", "POSTGRES_PASSWORD=postgres"}
+
+	return docker.StartContainer(image, port, args...)
+}
+
+// StopDB stops a running database instance.
+func StopDB(c *docker.Container) {
+	docker.StopContainer(c.ID)
 }
 
 // NewUnit creates a test database inside a Docker container. It creates the
 // required table structure but the database is otherwise empty. It returns
 // the database to use as well as a function to call at the end of the test.
-func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func()) {
-	r, w, _ := os.Pipe()
-	old := os.Stdout
-	os.Stdout = w
+func NewUnit(t *testing.T, c *docker.Container, dbName string) (*zap.SugaredLogger, *sqlx.DB, func()) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	c := docker.StartContainer(t, dbc.Image, dbc.Port, dbc.Args...)
-
-	db, err := database.Open(database.Config{
+	dbM, err := database.Open(database.Config{
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
@@ -60,39 +63,60 @@ func NewUnit(t *testing.T, dbc DBContainer) (*zap.SugaredLogger, *sqlx.DB, func(
 
 	t.Log("Waiting for database to be ready ...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	if err := database.StatusCheck(ctx, dbM); err != nil {
+		t.Fatalf("status check database: %v", err)
+	}
+
+	t.Log("Database ready")
+
+	if _, err := dbM.ExecContext(context.Background(), "CREATE DATABASE "+dbName); err != nil {
+		t.Fatalf("creating database %s: %v", dbName, err)
+	}
+	dbM.Close()
+
+	// =========================================================================
+
+	db, err := database.Open(database.Config{
+		User:       "postgres",
+		Password:   "postgres",
+		Host:       c.Host,
+		Name:       dbName,
+		DisableTLS: true,
+	})
+	if err != nil {
+		t.Fatalf("Opening database connection: %v", err)
+	}
+
+	t.Log("Migrate and seed database ...")
 
 	if err := dbschema.Migrate(ctx, db); err != nil {
 		docker.DumpContainerLogs(t, c.ID)
-		docker.StopContainer(t, c.ID)
 		t.Fatalf("Migrating error: %s", err)
 	}
 
 	if err := dbschema.Seed(ctx, db); err != nil {
 		docker.DumpContainerLogs(t, c.ID)
-		docker.StopContainer(t, c.ID)
 		t.Fatalf("Seeding error: %s", err)
 	}
 
-	log, err := logger.New("TEST")
-	if err != nil {
-		t.Fatalf("logger error: %s", err)
-	}
+	t.Log("Ready for testing ...")
+
+	var buf bytes.Buffer
+	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+	writer := bufio.NewWriter(&buf)
+	log := zap.New(
+		zapcore.NewCore(encoder, zapcore.AddSync(writer), zapcore.DebugLevel)).
+		Sugar()
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
 	teardown := func() {
 		t.Helper()
 		db.Close()
-		docker.StopContainer(t, c.ID)
 
 		log.Sync()
 
-		w.Close()
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		os.Stdout = old
+		writer.Flush()
 		fmt.Println("******************** LOGS ********************")
 		fmt.Print(buf.String())
 		fmt.Println("******************** LOGS ********************")
@@ -112,8 +136,8 @@ type Test struct {
 }
 
 // NewIntegration creates a database, seeds it, constructs an authenticator.
-func NewIntegration(t *testing.T, dbc DBContainer) *Test {
-	log, db, teardown := NewUnit(t, dbc)
+func NewIntegration(t *testing.T, c *docker.Container, dbName string) *Test {
+	log, db, teardown := NewUnit(t, c, dbName)
 
 	// Create RSA keys to enable authentication in our service.
 	keyID := "4754d86b-7a6d-4df5-9c65-224741361492"

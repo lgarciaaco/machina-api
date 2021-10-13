@@ -3,6 +3,7 @@ package user_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,16 +12,25 @@ import (
 	"github.com/lgarciaaco/machina-api/business/data/dbschema"
 	"github.com/lgarciaaco/machina-api/business/data/dbtest"
 	"github.com/lgarciaaco/machina-api/business/sys/auth"
+	"github.com/lgarciaaco/machina-api/foundation/docker"
 )
 
-var dbc = dbtest.DBContainer{
-	Image: "postgres:14-alpine",
-	Port:  "5432",
-	Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+var c *docker.Container
+
+func TestMain(m *testing.M) {
+	var err error
+	c, err = dbtest.StartDB()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer dbtest.StopDB(c)
+
+	m.Run()
 }
 
 func TestUser(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
 	t.Cleanup(teardown)
 
 	core := user.NewCore(log, db)
@@ -58,7 +68,7 @@ func TestUser(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould get back the same user.", dbtest.Success, testID)
 
 			upd := user.UpdateUser{
-				Name:  dbtest.StringPointer("Jacob Walker"),
+				Name: dbtest.StringPointer("Jacob Walker"),
 			}
 
 			if err := core.Update(ctx, usr.ID, upd, now); err != nil {
@@ -95,7 +105,7 @@ func TestUser(t *testing.T) {
 }
 
 func TestPagingUser(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
