@@ -183,19 +183,11 @@ Feature: Users api
     }
     """
 
-    When I PUT path "/users/${nUsrId}" with json body
+    When I PUT path "/users/${nUsrId}" with json body:
     """
     {"name": "some_other_name"}
     """
     Then the response code should be 204
-    And the response should match json:
-    """
-    {}
-    """
 
     When I DELETE path "/users/${nUsrId}"
     Then the response code should be 204
-    And the response should match json:
-    """
-    {}
-    """

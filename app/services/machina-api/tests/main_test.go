@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -76,13 +77,14 @@ func Test_integration(t *testing.T) {
 	// Create connectivity to the database.
 	log.Infow("startup", "status", "initializing database support using docker")
 
-	var dbc = dbtest.DBContainer{
-		Image: "postgres:14-alpine",
-		Port:  "5432",
-		Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+	c, err := dbtest.StartDB()
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	defer dbtest.StopDB(c)
 
-	log, db, teardown := dbtest.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, c, "integration")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

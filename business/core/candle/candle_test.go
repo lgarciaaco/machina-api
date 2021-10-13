@@ -2,8 +2,11 @@ package candle
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/lgarciaaco/machina-api/foundation/docker"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -11,14 +14,22 @@ import (
 	"github.com/lgarciaaco/machina-api/business/data/dbtest"
 )
 
-var dbc = dbtest.DBContainer{
-	Image: "postgres:14-alpine",
-	Port:  "5432",
-	Args:  []string{"-e", "POSTGRES_PASSWORD=postgres"},
+var c *docker.Container
+
+func TestMain(m *testing.M) {
+	var err error
+	c, err = dbtest.StartDB()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer dbtest.StopDB(c)
+
+	m.Run()
 }
 
 func TestCandle(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, c, "testcandle")
 	t.Cleanup(teardown)
 
 	core := NewCore(log, db)
@@ -62,7 +73,7 @@ func TestCandle(t *testing.T) {
 }
 
 func TestPagingCandle(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, dbc)
+	log, db, teardown := dbtest.NewUnit(t, c, "testcandle")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

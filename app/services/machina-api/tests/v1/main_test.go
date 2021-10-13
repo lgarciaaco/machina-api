@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/foundation/docker"
+	"github.com/lgarciaaco/machina-api/business/data/dbtest"
+	"github.com/lgarciaaco/machina-api/foundation/docker"
 )
 
 var c *docker.Container
