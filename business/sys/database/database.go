@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ardanlabs/service/foundation/web"
 	"github.com/jmoiron/sqlx"
+	"github.com/lgarciaaco/machina-api/foundation/web"
 	_ "github.com/lib/pq" // Calls init function.
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -110,7 +110,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
-// collection of data to be unmarshaled into a slice.
+// collection of data to be unmarshalled into a slice.
 func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, sqlxDB *sqlx.DB, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)

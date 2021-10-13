@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
 	"go.uber.org/zap"
 )
 
@@ -28,9 +28,9 @@ func NewStore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Store {
 func (s Store) Create(ctx context.Context, usr User) error {
 	const q = `
 	INSERT INTO users
-		(user_id, name, email, password_hash, roles, date_created, date_updated)
+		(user_id, name, password_hash, roles, date_created, date_updated)
 	VALUES
-		(:user_id, :name, :email, :password_hash, :roles, :date_created, :date_updated)`
+		(:user_id, :name, :password_hash, :roles, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.sqlxDB, q, usr); err != nil {
 		return fmt.Errorf("inserting user: %w", err)
@@ -46,7 +46,6 @@ func (s Store) Update(ctx context.Context, usr User) error {
 		users
 	SET 
 		"name" = :name,
-		"email" = :email,
 		"roles" = :roles,
 		"password_hash" = :password_hash,
 		"date_updated" = :date_updated
@@ -127,30 +126,6 @@ func (s Store) QueryByID(ctx context.Context, userID string) (User, error) {
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.log, s.sqlxDB, q, data, &usr); err != nil {
 		return User{}, fmt.Errorf("selecting userID[%q]: %w", userID, err)
-	}
-
-	return usr, nil
-}
-
-// QueryByEmail gets the specified user from the database by email.
-func (s Store) QueryByEmail(ctx context.Context, email string) (User, error) {
-	data := struct {
-		Email string `db:"email"`
-	}{
-		Email: email,
-	}
-
-	const q = `
-	SELECT
-		*
-	FROM
-		users
-	WHERE
-		email = :email`
-
-	var usr User
-	if err := database.NamedQueryStruct(ctx, s.log, s.sqlxDB, q, data, &usr); err != nil {
-		return User{}, fmt.Errorf("selecting email[%q]: %w", email, err)
 	}
 
 	return usr, nil

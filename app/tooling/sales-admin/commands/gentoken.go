@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/foundation/keystore"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/lgarciaaco/machina-api/business/core/user"
+	"github.com/lgarciaaco/machina-api/business/sys/auth"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
+	"github.com/lgarciaaco/machina-api/foundation/keystore"
 	"go.uber.org/zap"
 )
 

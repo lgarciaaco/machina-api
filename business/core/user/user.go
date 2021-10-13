@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user/db"
-	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/business/sys/validate"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
+	"github.com/lgarciaaco/machina-api/business/core/user/db"
+	"github.com/lgarciaaco/machina-api/business/sys/auth"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
+	"github.com/lgarciaaco/machina-api/business/sys/validate"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -52,7 +52,6 @@ func (c Core) Create(ctx context.Context, nu NewUser, now time.Time) (User, erro
 	dbUsr := db.User{
 		ID:           validate.GenerateID(),
 		Name:         nu.Name,
-		Email:        nu.Email,
 		PasswordHash: hash,
 		Roles:        nu.Roles,
 		DateCreated:  now,
@@ -86,9 +85,6 @@ func (c Core) Update(ctx context.Context, userID string, uu UpdateUser, now time
 
 	if uu.Name != nil {
 		dbUsr.Name = *uu.Name
-	}
-	if uu.Email != nil {
-		dbUsr.Email = *uu.Email
 	}
 	if uu.Roles != nil {
 		dbUsr.Roles = uu.Roles
@@ -152,30 +148,11 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 	return toUser(dbUsr), nil
 }
 
-// QueryByEmail gets the specified user from the database by email.
-func (c Core) QueryByEmail(ctx context.Context, email string) (User, error) {
-
-	// Add Email Validate function in validate
-	// if err := validate.Email(email); err != nil {
-	// 	return User{}, ErrInvalidEmail
-	// }
-
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
-	if err != nil {
-		if errors.Is(err, database.ErrDBNotFound) {
-			return User{}, ErrNotFound
-		}
-		return User{}, fmt.Errorf("query: %w", err)
-	}
-
-	return toUser(dbUsr), nil
-}
-
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c Core) Authenticate(ctx context.Context, now time.Time, email, password string) (auth.Claims, error) {
-	dbUsr, err := c.store.QueryByEmail(ctx, email)
+func (c Core) Authenticate(ctx context.Context, now time.Time, usrId, password string) (auth.Claims, error) {
+	dbUsr, err := c.store.QueryByID(ctx, usrId)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return auth.Claims{}, ErrNotFound

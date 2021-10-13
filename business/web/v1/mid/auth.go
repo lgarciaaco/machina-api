@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ardanlabs/service/business/sys/auth"
-	v1Web "github.com/ardanlabs/service/business/web/v1"
-	"github.com/ardanlabs/service/foundation/web"
+	"github.com/lgarciaaco/machina-api/business/sys/auth"
+	v1Web "github.com/lgarciaaco/machina-api/business/web/v1"
+	"github.com/lgarciaaco/machina-api/foundation/web"
 )
 
 // Authenticate validates a JWT from the `Authorization` header.
@@ -27,7 +27,7 @@ func Authenticate(a *auth.Auth) web.Middleware {
 			// Parse the authorization header.
 			parts := strings.Split(authStr, " ")
 			if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-				err := errors.New("expected authorization header format: bearer <token>")
+				err := errors.New("expected authorization header format: Bearer: TOKEN")
 				return v1Web.NewRequestError(err, http.StatusUnauthorized)
 			}
 

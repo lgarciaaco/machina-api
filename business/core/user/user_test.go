@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/data/dbschema"
-	"github.com/ardanlabs/service/business/data/dbtest"
-	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/google/go-cmp/cmp"
+	"github.com/lgarciaaco/machina-api/business/core/user"
+	"github.com/lgarciaaco/machina-api/business/data/dbschema"
+	"github.com/lgarciaaco/machina-api/business/data/dbtest"
+	"github.com/lgarciaaco/machina-api/business/sys/auth"
 )
 
 var dbc = dbtest.DBContainer{
@@ -34,8 +34,7 @@ func TestUser(t *testing.T) {
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
 			nu := user.NewUser{
-				Name:            "Bill Kennedy",
-				Email:           "bill@ardanlabs.com",
+				Name:            "Luis Garcia",
 				Roles:           []string{auth.RoleAdmin},
 				Password:        "gophers",
 				PasswordConfirm: "gophers",
@@ -60,7 +59,6 @@ func TestUser(t *testing.T) {
 
 			upd := user.UpdateUser{
 				Name:  dbtest.StringPointer("Jacob Walker"),
-				Email: dbtest.StringPointer("jacob@ardanlabs.com"),
 			}
 
 			if err := core.Update(ctx, usr.ID, upd, now); err != nil {
@@ -68,7 +66,7 @@ func TestUser(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to update user.", dbtest.Success, testID)
 
-			saved, err = core.QueryByEmail(ctx, *upd.Email)
+			saved, err = core.QueryByID(ctx, usr.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
 			}
@@ -80,14 +78,6 @@ func TestUser(t *testing.T) {
 				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Name)
 			} else {
 				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Name.", dbtest.Success, testID)
-			}
-
-			if saved.Email != *upd.Email {
-				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Failed, testID)
-				t.Logf("\t\tTest %d:\tGot: %v", testID, saved.Email)
-				t.Logf("\t\tTest %d:\tExp: %v", testID, *upd.Email)
-			} else {
-				t.Logf("\t%s\tTest %d:\tShould be able to see updates to Email.", dbtest.Success, testID)
 			}
 
 			if err := core.Delete(ctx, usr.ID); err != nil {

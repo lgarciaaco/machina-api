@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
 	"go.uber.org/zap"
 )
 

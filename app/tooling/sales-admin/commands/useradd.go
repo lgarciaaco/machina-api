@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/user"
-	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
+	"github.com/lgarciaaco/machina-api/business/core/user"
+	"github.com/lgarciaaco/machina-api/business/sys/auth"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +31,6 @@ func UserAdd(log *zap.SugaredLogger, cfg database.Config, name, email, password 
 
 	nu := user.NewUser{
 		Name:            name,
-		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
 		Roles:           []string{auth.RoleAdmin, auth.RoleUser},

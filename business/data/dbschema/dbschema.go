@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/ardanlabs/darwin"
-	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/jmoiron/sqlx"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
 )
 
 var (

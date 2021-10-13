@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf/v2"
-	"github.com/ardanlabs/service/app/tooling/sales-admin/commands"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/lgarciaaco/machina-api/app/tooling/sales-admin/commands"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
+	"github.com/lgarciaaco/machina-api/foundation/logger"
 	"go.uber.org/zap"
 )
 

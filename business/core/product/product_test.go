@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/business/core/product"
-	"github.com/ardanlabs/service/business/data/dbtest"
 	"github.com/google/go-cmp/cmp"
+	"github.com/lgarciaaco/machina-api/business/core/product"
+	"github.com/lgarciaaco/machina-api/business/data/dbtest"
 )
 
 var dbc = dbtest.DBContainer{
@@ -23,10 +23,10 @@ func TestProduct(t *testing.T) {
 
 	core := product.NewCore(log, db)
 
-	t.Log("Given the need to work with Product records.")
+	t.Log("Given the need to work with Candle records.")
 	{
 		testID := 0
-		t.Logf("\tTest %d:\tWhen handling a single Product.", testID)
+		t.Logf("\tTest %d:\tWhen handling a single Candle.", testID)
 		{
 			ctx := context.Background()
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)

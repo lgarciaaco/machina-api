@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v2"
-	"github.com/ardanlabs/service/app/services/metrics/collector"
-	"github.com/ardanlabs/service/app/services/metrics/publisher"
-	expvarsrv "github.com/ardanlabs/service/app/services/metrics/publisher/expvar"
-	"github.com/ardanlabs/service/foundation/logger"
+	"github.com/lgarciaaco/machina-api/app/services/metrics/collector"
+	"github.com/lgarciaaco/machina-api/app/services/metrics/publisher"
+	expvarsrv "github.com/lgarciaaco/machina-api/app/services/metrics/publisher/expvar"
+	"github.com/lgarciaaco/machina-api/foundation/logger"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 )

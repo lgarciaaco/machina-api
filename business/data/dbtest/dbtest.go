@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	dbUser "github.com/ardanlabs/service/business/core/user/db"
-	"github.com/ardanlabs/service/business/data/dbschema"
-	"github.com/ardanlabs/service/business/sys/auth"
-	"github.com/ardanlabs/service/business/sys/database"
-	"github.com/ardanlabs/service/foundation/docker"
-	"github.com/ardanlabs/service/foundation/keystore"
-	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jmoiron/sqlx"
+	dbUser "github.com/lgarciaaco/machina-api/business/core/user/db"
+	"github.com/lgarciaaco/machina-api/business/data/dbschema"
+	"github.com/lgarciaaco/machina-api/business/sys/auth"
+	"github.com/lgarciaaco/machina-api/business/sys/database"
+	"github.com/lgarciaaco/machina-api/foundation/docker"
+	"github.com/lgarciaaco/machina-api/foundation/keystore"
+	"github.com/lgarciaaco/machina-api/foundation/logger"
 	"go.uber.org/zap"
 )
 
@@ -140,11 +140,11 @@ func NewIntegration(t *testing.T, dbc DBContainer) *Test {
 }
 
 // Token generates an authenticated token for a user.
-func (test *Test) Token(email, pass string) string {
+func (test *Test) Token(userID, pass string) string {
 	test.t.Log("Generating token for test ...")
 
 	store := dbUser.NewStore(test.Log, test.DB)
-	dbUsr, err := store.QueryByEmail(context.Background(), email)
+	dbUsr, err := store.QueryByID(context.Background(), userID)
 	if err != nil {
 		return ""
 	}
