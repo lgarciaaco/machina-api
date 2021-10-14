@@ -50,6 +50,8 @@ func Routes(app *web.App, cfg Config) {
 		Candle: candle.NewCore(cfg.Log, cfg.DB),
 	}
 	app.Handle(http.MethodGet, version, "/candles/:page/:rows", cgh.Query)
+	app.Handle(http.MethodGet, version, "/candles/:symbol/:interval/:page/:rows", cgh.QueryBySymbolAndInterval)
+	app.Handle(http.MethodGet, version, "/candles/:id", cgh.QueryByID)
 
 	// Register product and sale endpoints.
 	pgh := productgrp.Handlers{

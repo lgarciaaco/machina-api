@@ -1,11 +1,11 @@
 Feature: Candles api
   Candles are the core unit of strategies. Candles api
-  doesnt require authentication
+  doesnt require authentication and it fetches candles
 
   Background:
     Given the path prefix is "/v1"
 
-  Scenario: List candles, newest candles should come first
+  Scenario: List / Fetch candles, paged, newest candles should come first
     When I GET path "/candles/1/3"
     Then the response code should be 200
     And the response should match json:
@@ -48,4 +48,57 @@ Feature: Candles api
         "volume": 13456
       }
     ]
+    """
+
+    When I GET path "/candles/ETHUSDT/4h/1/1"
+    Then the response code should be 200
+    And the response should match json:
+    """
+    [
+      {
+        "close_price": 310.5,
+        "close_time": "2019-01-01T00:09:03.000001Z",
+        "high": 311,
+        "id": "cd0f4919-2fe7-4808-8ba2-a1ea652cd591",
+        "interval": "4h",
+        "low": 398.6,
+        "open_price": 200.5,
+        "open_time": "2019-01-01T00:08:03.000001Z",
+        "symbol": "ETHUSDT",
+        "volume": 33456
+      }
+    ]
+    """
+
+    When I GET path "/candles/cd0f4919-2fe7-4808-8ba2-a1ea652cd591"
+    Then the response code should be 200
+    And the response should match json:
+    """
+    {
+      "close_price": 310.5,
+      "close_time": "2019-01-01T00:09:03.000001Z",
+      "high": 311,
+      "id": "cd0f4919-2fe7-4808-8ba2-a1ea652cd591",
+      "interval": "4h",
+      "low": 398.6,
+      "open_price": 200.5,
+      "open_time": "2019-01-01T00:08:03.000001Z",
+      "symbol": "ETHUSDT",
+      "volume": 33456
+    }
+    """
+
+  Scenario: use wrong symbol and interval to list candles
+    When I GET path "/candles/some_symbol/4h/1/1"
+    Then the response code should be 200
+    And the response should match json:
+    """
+    []
+    """
+
+    When I GET path "/candles/ETHUSDT/some_interval/1/1"
+    Then the response code should be 200
+    And the response should match json:
+    """
+    []
     """

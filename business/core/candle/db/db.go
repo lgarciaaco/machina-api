@@ -87,7 +87,7 @@ func (s Agent) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, row
 	WHERE 
 		interval = :interval AND symbol = :symbol
 	ORDER BY
-		close_time
+		close_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var cdls []Candle
