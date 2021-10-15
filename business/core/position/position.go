@@ -1,3 +1,5 @@
+// Package position provides middleware utilities around positions.
+// It wraps calls to the database and to the binance endpoints.
 package position
 
 import (
@@ -70,12 +72,12 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Pos
 }
 
 // QueryByID gets the specified position from the database.
-func (c Core) QueryByID(ctx context.Context, posId string) (Position, error) {
-	if err := validate.CheckID(posId); err != nil {
+func (c Core) QueryByID(ctx context.Context, posID string) (Position, error) {
+	if err := validate.CheckID(posID); err != nil {
 		return Position{}, ErrInvalidID
 	}
 
-	dbPos, err := c.agent.QueryByID(ctx, posId)
+	dbPos, err := c.agent.QueryByID(ctx, posID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Position{}, ErrNotFound
@@ -87,8 +89,8 @@ func (c Core) QueryByID(ctx context.Context, posId string) (Position, error) {
 }
 
 // QueryByUser gets the specified position from the database given a userId.
-func (c Core) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, usrId string) ([]Position, error) {
-	dbPoss, err := c.agent.QueryByUser(ctx, pageNumber, rowsPerPage, usrId)
+func (c Core) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, usrID string) ([]Position, error) {
+	dbPoss, err := c.agent.QueryByUser(ctx, pageNumber, rowsPerPage, usrID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return nil, ErrNotFound
@@ -102,17 +104,17 @@ func (c Core) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, 
 // Close closes a position identified by a given ID.
 // Closing a position consist on figuring out the open balance and creating a position
 // to set balance to 0.
-func (c Core) Close(ctx context.Context, posId string) error {
-	if err := validate.CheckID(posId); err != nil {
+func (c Core) Close(ctx context.Context, posID string) error {
+	if err := validate.CheckID(posID); err != nil {
 		return ErrInvalidID
 	}
 
-	dbPos, err := c.agent.QueryByID(ctx, posId)
+	dbPos, err := c.agent.QueryByID(ctx, posID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return ErrNotFound
 		}
-		return fmt.Errorf("updating product posId[%s]: %w", posId, err)
+		return fmt.Errorf("updating product posID[%s]: %w", posID, err)
 	}
 
 	if dbPos.Status == "closed" {

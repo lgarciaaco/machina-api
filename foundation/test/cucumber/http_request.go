@@ -1,20 +1,3 @@
-// Setting a path prefixed to subsequent http requests:
-//    Given the path prefix is "/api/kafkas_mgmt"
-// Send an http request. Supports (GET|POST|PUT|DELETE|PATCH|OPTION):
-//    When I GET path "/v1/some/${kid}
-// Send an http request with a body. Supports (GET|POST|PUT|DELETE|PATCH|OPTION):
-//    When I POST path "/v1/some/${kid}" with json body:
-//      """
-//      {"some":"${kid}"}
-//      """
-// Wait until an http get responds with an expected result or a timeout occurs:
-//    Given I wait up to "35.5" seconds for a GET on path "/v1/some/path" response ".total" selection to match "1"
-// Wait until an http get responds with an expected response code or a timeout occurs:
-//    Given I wait up to "35.5" seconds for a GET on path "/v1/some/path" response code to match "200"
-// Send an http request that receives a stream of events. Supports (GET|POST|PUT|DELETE|PATCH|OPTION). :
-//    When I GET path "/v1/some/${kid} as an event stream
-// Wait until a json event arrives on the event stream or a timeout occurs:
-//    Given I wait up to "35" seconds for a response json event
 package cucumber
 
 import (
@@ -31,34 +14,34 @@ import (
 
 func init() {
 	StepModules = append(StepModules, func(ctx *godog.ScenarioContext, s *TestScenario) {
-		ctx.Step(`^the path prefix is "([^"]*)"$`, s.theApiPrefixIs)
-		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)"$`, s.sendHttpRequest)
-		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" as a json event stream$`, s.sendHttpRequestAsEventStream)
-		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" with json body:$`, s.SendHttpRequestWithJsonBody)
+		ctx.Step(`^the path prefix is "([^"]*)"$`, s.theAPIPrefixIs)
+		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)"$`, s.sendHTTPRequest)
+		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" as a json event stream$`, s.sendHTTPRequestAsEventStream)
+		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" with json body:$`, s.SendHTTPRequestWithJSONBody)
 		ctx.Step(`^I wait up to "([^"]*)" seconds for a GET on path "([^"]*)" response "([^"]*)" selection to match "([^"]*)"$`, s.iWaitUpToSecondsForAGETOnPathResponseSelectionToMatch)
 		ctx.Step(`^I wait up to "([^"]*)" seconds for a GET on path "([^"]*)" response code to match "([^"]*)"$`, s.iWaitUpToSecondsForAGETOnPathResponseCodeToMatch)
-		ctx.Step(`^I wait up to "([^"]*)" seconds for a response event$`, s.iWaitUpToSecondsForAResponseJsonEvent)
+		ctx.Step(`^I wait up to "([^"]*)" seconds for a response event$`, s.iWaitUpToSecondsForAResponseJSONEvent)
 	})
 }
 
-func (s *TestScenario) theApiPrefixIs(prefix string) error {
+func (s *TestScenario) theAPIPrefixIs(prefix string) error {
 	s.PathPrefix = prefix
 	return nil
 }
 
-func (s *TestScenario) sendHttpRequest(method, path string) error {
-	return s.SendHttpRequestWithJsonBody(method, path, nil)
+func (s *TestScenario) sendHTTPRequest(method, path string) error {
+	return s.SendHTTPRequestWithJSONBody(method, path, nil)
 }
 
-func (s *TestScenario) sendHttpRequestAsEventStream(method, path string) error {
-	return s.SendHttpRequestWithJsonBodyAndStyle(method, path, nil, true, true)
+func (s *TestScenario) sendHTTPRequestAsEventStream(method, path string) error {
+	return s.SendHTTPRequestWithJSONBodyAndStyle(method, path, nil, true, true)
 }
 
-func (s *TestScenario) SendHttpRequestWithJsonBody(method, path string, jsonTxt *godog.DocString) (err error) {
-	return s.SendHttpRequestWithJsonBodyAndStyle(method, path, jsonTxt, false, true)
+func (s *TestScenario) SendHTTPRequestWithJSONBody(method, path string, jsonTxt *godog.DocString) (err error) {
+	return s.SendHTTPRequestWithJSONBodyAndStyle(method, path, jsonTxt, false, true)
 }
 
-func (s *TestScenario) SendHttpRequestWithJsonBodyAndStyle(method, path string, jsonTxt *godog.DocString, eventStream bool, expandJson bool) (err error) {
+func (s *TestScenario) SendHTTPRequestWithJSONBodyAndStyle(method, path string, jsonTxt *godog.DocString, eventStream bool, expandJSON bool) (err error) {
 	// handle panic
 	defer func() {
 		switch t := recover().(type) {
@@ -74,7 +57,7 @@ func (s *TestScenario) SendHttpRequestWithJsonBodyAndStyle(method, path string, 
 	body := &bytes.Buffer{}
 	if jsonTxt != nil {
 		expanded := jsonTxt.Content
-		if expandJson {
+		if expandJSON {
 			expanded, err = s.Expand(expanded)
 			if err != nil {
 				return err
@@ -86,7 +69,7 @@ func (s *TestScenario) SendHttpRequestWithJsonBodyAndStyle(method, path string, 
 	if err != nil {
 		return err
 	}
-	fullUrl := s.Suite.ApiURL + s.PathPrefix + expandedPath
+	fullURL := s.Suite.APIURL + s.PathPrefix + expandedPath
 
 	// Lets reset all the response session state...
 	if session.Resp != nil {
@@ -95,14 +78,14 @@ func (s *TestScenario) SendHttpRequestWithJsonBodyAndStyle(method, path string, 
 	session.EventStream = false
 	session.Resp = nil
 	session.RespBytes = nil
-	session.respJson = nil
+	session.respJSON = nil
 
 	ctx := session.Ctx
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, fullUrl, body)
+	req, err := http.NewRequestWithContext(ctx, method, fullURL, body)
 	if err != nil {
 		return err
 	}
@@ -155,13 +138,13 @@ func (s *TestScenario) SendHttpRequestWithJsonBodyAndStyle(method, path string, 
 	return nil
 }
 
-func (s *TestScenario) iWaitUpToSecondsForAResponseJsonEvent(timeout float64) error {
+func (s *TestScenario) iWaitUpToSecondsForAResponseJSONEvent(timeout float64) error {
 	session := s.Session()
 	if !session.EventStream {
 		return fmt.Errorf("the last http request was not performed as a json event stream")
 	}
 
-	session.respJson = nil
+	session.respJSON = nil
 	session.RespBytes = session.RespBytes[0:0]
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout*float64(time.Second)))
@@ -170,7 +153,7 @@ func (s *TestScenario) iWaitUpToSecondsForAResponseJsonEvent(timeout float64) er
 	select {
 	case event := <-session.EventStreamEvents:
 
-		session.respJson = event
+		session.respJSON = event
 		var err error
 		session.RespBytes, err = json.Marshal(event)
 		if err != nil {
@@ -193,7 +176,7 @@ func (s *TestScenario) iWaitUpToSecondsForAGETOnPathResponseCodeToMatch(timeout 
 	}()
 
 	for {
-		err := s.sendHttpRequest("GET", path)
+		err := s.sendHTTPRequest("GET", path)
 		if err == nil {
 			err = s.theResponseCodeShouldBe(expected)
 			if err == nil {
@@ -221,7 +204,7 @@ func (s *TestScenario) iWaitUpToSecondsForAGETOnPathResponseSelectionToMatch(tim
 	}()
 
 	for {
-		err := s.sendHttpRequest("GET", path)
+		err := s.sendHTTPRequest("GET", path)
 		if err == nil {
 			err = s.theSelectionFromTheResponseShouldMatch(selection, expected)
 			if err == nil {

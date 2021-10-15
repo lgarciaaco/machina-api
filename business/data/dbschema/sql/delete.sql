@@ -1,3 +1,5 @@
-DELETE FROM sales;
-DELETE FROM products;
 DELETE FROM users;
+DELETE FROM positions;
+DELETE FROM candles;
+DELETE FROM symbols;
+DELETE FROM orders;

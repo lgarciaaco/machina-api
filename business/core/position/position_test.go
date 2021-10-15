@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestPosition(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testposition")
+	log, db, teardown := dbtest.NewUnit(t, c, "testpos")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,7 +74,7 @@ func TestPosition(t *testing.T) {
 }
 
 func TestPagingPosition(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testposition")
+	log, db, teardown := dbtest.NewUnit(t, c, "testpospg")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

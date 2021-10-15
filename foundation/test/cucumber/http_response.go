@@ -1,39 +1,3 @@
-// Assert response code is correct:
-//    Then the response code should be 202
-// Assert that a json field of the response body is correct.  This uses a http://github.com/itchyny/gojq expression to select the json field of the
-// response:
-//    Then the ".status" selection from the response should match "assigning"
-// Assert that the response body matches the provided text:
-//    Then the response should match "Hello"
-//    Then the response should match:
-//    """
-//    Hello
-//    """
-// Assert that response json matches the provided json.  Differences in json formatting and field order are ignored.:
-//    Then the response should match json:
-//      """
-//      {
-//          "id": "${cid}",
-//      }
-//      """
-// Stores a json field of the response body in a scenario variable:
-//    Given I store the ".id" selection from the response as ${cid}
-// Stores a json value in a scenario variable:
-//    Given I store json as ${$input}:
-//      """
-//      {
-//          "id": "${cid}",
-//      }
-//      """
-// Assert that a response header matches the provided text:
-//    Then the response header "Content-Type" should match "application/json;stream=watch"
-// Assert that a json field of the response body is correct matches the provided json:
-//    Then the ".deployment_location" selection from the response should match json:
-//      """
-//      {
-//          "kind": "addon",
-//      }
-//      """
 package cucumber
 
 import (
@@ -48,14 +12,14 @@ import (
 func init() {
 	StepModules = append(StepModules, func(ctx *godog.ScenarioContext, s *TestScenario) {
 		ctx.Step(`^the response code should be (\d+)$`, s.theResponseCodeShouldBe)
-		ctx.Step(`^the response should match json:$`, s.TheResponseShouldMatchJsonDoc)
+		ctx.Step(`^the response should match json:$`, s.TheResponseShouldMatchJSONDoc)
 		ctx.Step(`^the response should match:$`, s.theResponseShouldMatchText)
 		ctx.Step(`^the response should match "([^"]*)"$`, s.theResponseShouldMatchText)
 		ctx.Step(`^I store the "([^"]*)" selection from the response as \${([^"]*)}$`, s.iStoreTheSelectionFromTheResponseAs)
-		ctx.Step(`^I store json as \${([^"]*)}:$`, s.iStoreJsonAsInput)
+		ctx.Step(`^I store json as \${([^"]*)}:$`, s.iStoreJSONAsInput)
 		ctx.Step(`^the "([^"]*)" selection from the response should match "([^"]*)"$`, s.theSelectionFromTheResponseShouldMatch)
 		ctx.Step(`^the response header "([^"]*)" should match "([^"]*)"$`, s.theResponseHeaderShouldMatch)
-		ctx.Step(`^the "([^"]*)" selection from the response should match json:$`, s.theSelectionFromTheResponseShouldMatchJson)
+		ctx.Step(`^the "([^"]*)" selection from the response should match json:$`, s.theSelectionFromTheResponseShouldMatchJSON)
 	})
 }
 
@@ -67,18 +31,18 @@ func (s *TestScenario) theResponseCodeShouldBe(expected int) error {
 	}
 	return nil
 }
-func (s *TestScenario) TheResponseShouldMatchJsonDoc(expected *godog.DocString) error {
-	return s.theResponseShouldMatchJson(expected.Content)
+func (s *TestScenario) TheResponseShouldMatchJSONDoc(expected *godog.DocString) error {
+	return s.theResponseShouldMatchJSON(expected.Content)
 }
 
-func (s *TestScenario) theResponseShouldMatchJson(expected string) error {
+func (s *TestScenario) theResponseShouldMatchJSON(expected string) error {
 	session := s.Session()
 
 	if len(session.RespBytes) == 0 {
 		return fmt.Errorf("got an empty response from server, expected a json body")
 	}
 
-	return s.JsonMustMatch(string(session.RespBytes), expected, true)
+	return s.JSONMustMatch(string(session.RespBytes), expected, true)
 }
 
 func (s *TestScenario) theResponseShouldMatchText(expected string) error {
@@ -100,7 +64,7 @@ func (s *TestScenario) theResponseShouldMatchText(expected string) error {
 			ToDate:   "",
 			Context:  1,
 		})
-		return fmt.Errorf("actual does not match expected, diff:\n%s\n", diff)
+		return fmt.Errorf("actual does not match expected, diff:\n%s", diff)
 	}
 	return nil
 }
@@ -122,7 +86,7 @@ func (s *TestScenario) theResponseHeaderShouldMatch(header, expected string) err
 func (s *TestScenario) iStoreTheSelectionFromTheResponseAs(selector string, as string) error {
 
 	session := s.Session()
-	doc, err := session.RespJson()
+	doc, err := session.RespJSON()
 	if err != nil {
 		return err
 	}
@@ -140,7 +104,7 @@ func (s *TestScenario) iStoreTheSelectionFromTheResponseAs(selector string, as s
 	return fmt.Errorf("expected JSON does not have node that matches selector: %s", selector)
 }
 
-func (s *TestScenario) iStoreJsonAsInput(as string, value *godog.DocString) error {
+func (s *TestScenario) iStoreJSONAsInput(as string, value *godog.DocString) error {
 	content, err := s.Expand(value.Content)
 	if err != nil {
 		return err
@@ -157,7 +121,7 @@ func (s *TestScenario) iStoreJsonAsInput(as string, value *godog.DocString) erro
 
 func (s *TestScenario) theSelectionFromTheResponseShouldMatch(selector string, expected string) error {
 	session := s.Session()
-	doc, err := session.RespJson()
+	doc, err := session.RespJSON()
 	if err != nil {
 		return err
 	}
@@ -183,10 +147,10 @@ func (s *TestScenario) theSelectionFromTheResponseShouldMatch(selector string, e
 	return fmt.Errorf("expected JSON does not have node that matches selector: %s", selector)
 }
 
-func (s *TestScenario) theSelectionFromTheResponseShouldMatchJson(selector string, expected *godog.DocString) error {
+func (s *TestScenario) theSelectionFromTheResponseShouldMatchJSON(selector string, expected *godog.DocString) error {
 
 	session := s.Session()
-	doc, err := session.RespJson()
+	doc, err := session.RespJSON()
 	if err != nil {
 		return err
 	}
@@ -203,7 +167,7 @@ func (s *TestScenario) theSelectionFromTheResponseShouldMatchJson(selector strin
 			return err
 		}
 
-		return s.JsonMustMatch(string(actual), expected.Content, true)
+		return s.JSONMustMatch(string(actual), expected.Content, true)
 	}
 	return fmt.Errorf("expected JSON does not have node that matches selector: %s", selector)
 }

@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestUser(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testuser")
+	log, db, teardown := dbtest.NewUnit(t, c, "testusr")
 	t.Cleanup(teardown)
 
 	core := user.NewCore(log, db)
@@ -105,7 +105,7 @@ func TestUser(t *testing.T) {
 }
 
 func TestPagingUser(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testpaging")
+	log, db, teardown := dbtest.NewUnit(t, c, "testusrpg")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

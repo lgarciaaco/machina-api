@@ -1,3 +1,8 @@
+// Package symbol provides middleware utilities around symbol.
+//
+// Symbol is a function whereby you have two different currencies that can be traded between one another.
+// When buying and selling a cryptocurrency, it is often swapped with local currency. For example,
+// If you're looking to buy or sell Bitcoin with U.S. Dollar, the trading pair would be BTC to USD
 package symbol
 
 import (
@@ -75,12 +80,12 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Sym
 }
 
 // QueryByID gets the specified symbol from the database.
-func (c Core) QueryByID(ctx context.Context, sblId string) (Symbol, error) {
-	if err := validate.CheckID(sblId); err != nil {
+func (c Core) QueryByID(ctx context.Context, sblID string) (Symbol, error) {
+	if err := validate.CheckID(sblID); err != nil {
 		return Symbol{}, ErrInvalidID
 	}
 
-	cdl, err := c.agent.QueryByID(ctx, sblId)
+	cdl, err := c.agent.QueryByID(ctx, sblID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Symbol{}, ErrNotFound

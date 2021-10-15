@@ -1,3 +1,4 @@
+// Package db contains position related CRUD functionality.
 package db
 
 import (
@@ -11,9 +12,10 @@ import (
 
 // Agent manages the set of API's for candle access.
 type Agent struct {
-	log *zap.SugaredLogger
-	tr  database.Transactor
-	db  sqlx.ExtContext
+	log          *zap.SugaredLogger
+	tr           database.Transactor
+	db           sqlx.ExtContext
+	isWithinTran bool
 }
 
 // NewAgent constructs a data for api access.
@@ -22,6 +24,24 @@ func NewAgent(log *zap.SugaredLogger, db *sqlx.DB) Agent {
 		log: log,
 		tr:  db,
 		db:  db,
+	}
+}
+
+// WithinTran runs passed function and do commit/rollback at the end.
+func (s Agent) WithinTran(ctx context.Context, fn func(sqlx.ExtContext) error) error {
+	if s.isWithinTran {
+		return fn(s.db)
+	}
+	return database.WithinTran(ctx, s.log, s.tr, fn)
+}
+
+// Tran return new Agent with transaction in it.
+func (s Agent) Tran(tx sqlx.ExtContext) Agent {
+	return Agent{
+		log:          s.log,
+		tr:           s.tr,
+		db:           tx,
+		isWithinTran: true,
 	}
 }
 
@@ -79,13 +99,13 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Po
 }
 
 // QueryByUser gets the specified candles from the database.
-func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, usrId string) ([]Position, error) {
+func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, usrID string) ([]Position, error) {
 	data := struct {
 		UserID      string `db:"user_id"`
 		Offset      int    `db:"offset"`
 		RowsPerPage int    `db:"rows_per_page"`
 	}{
-		UserID:      usrId,
+		UserID:      usrID,
 		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
 	}
@@ -102,10 +122,10 @@ func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int,
 		users AS u ON p.user_id = u.user_id
 	LEFT JOIN
 		symbols AS s ON p.symbol_id = s.symbol_id
-	WHERE 
-		p.user_id = :user_id
 	LEFT JOIN
 		orders AS o ON p.position_id = o.position_id
+	WHERE 
+		p.user_id = :user_id
 	GROUP BY
 		p.position_id, u.name, s.symbol
 	ORDER BY
@@ -114,18 +134,18 @@ func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int,
 
 	var poss []Position
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &poss); err != nil {
-		return nil, fmt.Errorf("selecting positions [%q]: %w", usrId, err)
+		return nil, fmt.Errorf("selecting positions [%q]: %w", usrID, err)
 	}
 
 	return poss, nil
 }
 
 // QueryByID gets the specified position from the database.
-func (s Agent) QueryByID(ctx context.Context, posId string) (Position, error) {
+func (s Agent) QueryByID(ctx context.Context, posID string) (Position, error) {
 	data := struct {
 		PositionID string `db:"position_id"`
 	}{
-		PositionID: posId,
+		PositionID: posID,
 	}
 
 	const q = `
@@ -149,7 +169,7 @@ func (s Agent) QueryByID(ctx context.Context, posId string) (Position, error) {
 
 	var pos Position
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &pos); err != nil {
-		return Position{}, fmt.Errorf("selecting posId[%q]: %w", posId, err)
+		return Position{}, fmt.Errorf("selecting posID[%q]: %w", posID, err)
 	}
 
 	return pos, nil

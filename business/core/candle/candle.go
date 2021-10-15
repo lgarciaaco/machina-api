@@ -1,3 +1,5 @@
+// Package candle provides middleware utilities around candles.
+// It wraps calls to the database.
 package candle
 
 import (

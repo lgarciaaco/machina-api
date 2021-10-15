@@ -1,3 +1,5 @@
+// Package order provides middleware utilities around orders.
+// It wraps calls to the database and to the binance endpoints.
 package order
 
 import (
@@ -57,12 +59,12 @@ func (c Core) Create(ctx context.Context, nOdr Order) (Order, error) {
 }
 
 // QueryByID gets the specified order from the database.
-func (c Core) QueryByID(ctx context.Context, odrId string) (Order, error) {
-	if err := validate.CheckID(odrId); err != nil {
+func (c Core) QueryByID(ctx context.Context, odrID string) (Order, error) {
+	if err := validate.CheckID(odrID); err != nil {
 		return Order{}, ErrInvalidID
 	}
 
-	odr, err := c.agent.QueryByID(ctx, odrId)
+	odr, err := c.agent.QueryByID(ctx, odrID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Order{}, ErrNotFound

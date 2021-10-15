@@ -68,19 +68,19 @@ func toPositionSlice(dbPoss []db.Position) []Position {
 	return poss
 }
 
-func (t orderTime) MarshalJSON() ([]byte, error) {
+func (ot orderTime) MarshalJSON() ([]byte, error) {
 	//do your serializing here
-	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format(time.RFC3339Nano))
+	stamp := fmt.Sprintf("\"%s\"", time.Time(ot).Format(time.RFC3339Nano))
 	return []byte(stamp), nil
 }
 
-func (j *orderTime) UnmarshalJSON(b []byte) error {
+func (ot *orderTime) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")
 	t, err := time.Parse("2006-01-02T15:04:05.999999", s)
 	if err != nil {
 		return err
 	}
 
-	*j = orderTime(t)
+	*ot = orderTime(t)
 	return nil
 }

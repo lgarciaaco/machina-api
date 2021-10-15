@@ -12,9 +12,7 @@ import (
 	"github.com/lgarciaaco/machina-api/business/core/candle"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/productgrp"
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/usergrp"
-	"github.com/lgarciaaco/machina-api/business/core/product"
 	"github.com/lgarciaaco/machina-api/business/core/user"
 	"github.com/lgarciaaco/machina-api/business/sys/auth"
 	"github.com/lgarciaaco/machina-api/business/web/v1/mid"
@@ -64,14 +62,4 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle(http.MethodGet, version, "/positions/:id", pos.QueryByID, authen)
 	app.Handle(http.MethodPost, version, "/positions", pos.Create, authen)
 	app.Handle(http.MethodDelete, version, "/positions/:id", pos.Close, authen)
-
-	// Register product and sale endpoints.
-	pgh := productgrp.Handlers{
-		Product: product.NewCore(cfg.Log, cfg.DB),
-	}
-	app.Handle(http.MethodGet, version, "/products/:page/:rows", pgh.Query, authen)
-	app.Handle(http.MethodGet, version, "/products/:id", pgh.QueryByID, authen)
-	app.Handle(http.MethodPost, version, "/products", pgh.Create, authen)
-	app.Handle(http.MethodPut, version, "/products/:id", pgh.Update, authen)
-	app.Handle(http.MethodDelete, version, "/products/:id", pgh.Delete, authen)
 }

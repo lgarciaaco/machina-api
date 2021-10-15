@@ -22,7 +22,6 @@
 //	cucumber.TestMain(h)
 //
 //}
-
 package cucumber
 
 import (
@@ -55,9 +54,9 @@ import (
 // TestSuite holds the sate global to all the test scenarios.
 // It is accessed concurrently from all test scenarios.
 type TestSuite struct {
-	ApiURL        string
+	APIURL        string
 	Mu            sync.Mutex
-	Db            *sqlx.DB
+	DB            *sqlx.DB
 	Logger        *zap.SugaredLogger
 	authenticator *auth.Auth
 	users         map[string]*TestUser
@@ -76,7 +75,7 @@ type TestUser struct {
 // concurrently.
 type TestScenario struct {
 	Suite           *TestSuite
-	Db              *sqlx.DB
+	DB              *sqlx.DB
 	CurrentUser     string
 	PathPrefix      string
 	sessions        map[string]*TestSession
@@ -103,12 +102,12 @@ func (s *TestScenario) Session() *TestSession {
 	return result
 }
 
-func (s *TestScenario) JsonMustMatch(actual, expected string, expand bool) error {
+func (s *TestScenario) JSONMustMatch(actual, expected string, expand bool) error {
 
 	var actualParsed interface{}
 	err := json.Unmarshal([]byte(actual), &actualParsed)
 	if err != nil {
-		return fmt.Errorf("error parsing actual json: %v\njson was:\n%s\n", err, actual)
+		return fmt.Errorf("error parsing actual json: %v\njson was:\n%s", err, actual)
 	}
 
 	var expectedParsed interface{}
@@ -120,7 +119,7 @@ func (s *TestScenario) JsonMustMatch(actual, expected string, expand bool) error
 		}
 	}
 	if err := json.Unmarshal([]byte(expanded), &expectedParsed); err != nil {
-		return fmt.Errorf("error parsing expected json: %v\njson was:\n%s\n", err, expanded)
+		return fmt.Errorf("error parsing expected json: %v\njson was:\n%s", err, expanded)
 	}
 
 	if !reflect.DeepEqual(expectedParsed, actualParsed) {
@@ -136,7 +135,7 @@ func (s *TestScenario) JsonMustMatch(actual, expected string, expand bool) error
 			ToDate:   "",
 			Context:  1,
 		})
-		return fmt.Errorf("actual does not match expected, diff:\n%s\n", diff)
+		return fmt.Errorf("actual does not match expected, diff:\n%s", diff)
 	}
 
 	return nil
@@ -157,7 +156,7 @@ func (s *TestScenario) Expand(value string) (result string, rerr error) {
 				return ""
 			}
 
-			j, err := session.RespJson()
+			j, err := session.RespJSON()
 			if err != nil {
 				rerr = err
 				return ""
@@ -179,7 +178,7 @@ func (s *TestScenario) Expand(value string) (result string, rerr error) {
 				case float32:
 					return fmt.Sprintf("%f", next)
 				case nil:
-					rerr = fmt.Errorf("field ${%s} not found in json response:\n%s\n", name, string(session.RespBytes))
+					rerr = fmt.Errorf("field ${%s} not found in json response:\n%s", name, string(session.RespBytes))
 					return ""
 				case error:
 					rerr = fmt.Errorf("failed to evaluate selection: %s: %v", name, next)
@@ -188,7 +187,7 @@ func (s *TestScenario) Expand(value string) (result string, rerr error) {
 					return fmt.Sprintf("%s", next)
 				}
 			} else {
-				rerr = fmt.Errorf("field ${%s} not found in json response:\n%s\n", name, string(session.RespBytes))
+				rerr = fmt.Errorf("field ${%s} not found in json response:\n%s", name, string(session.RespBytes))
 				return ""
 			}
 		}
@@ -208,50 +207,50 @@ type TestSession struct {
 	Resp              *http.Response
 	Ctx               context.Context
 	RespBytes         []byte
-	respJson          interface{}
+	respJSON          interface{}
 	Header            http.Header
 	EventStream       bool
 	EventStreamEvents chan interface{}
 	Debug             bool
 }
 
-// RespJson returns the last http response body as json
-func (s *TestSession) RespJson() (interface{}, error) {
-	if s.respJson == nil {
-		if err := json.Unmarshal(s.RespBytes, &s.respJson); err != nil {
-			return nil, fmt.Errorf("error parsing json response: %v\nbody: %s\n", err, string(s.RespBytes))
+// RespJSON returns the last http response body as json
+func (s *TestSession) RespJSON() (interface{}, error) {
+	if s.respJSON == nil {
+		if err := json.Unmarshal(s.RespBytes, &s.respJSON); err != nil {
+			return nil, fmt.Errorf("error parsing json response: %v\nbody: %s", err, string(s.RespBytes))
 		}
 
 		if s.Debug {
 			fmt.Println("response json:")
 			e := json.NewEncoder(os.Stdout)
 			e.SetIndent("", "  ")
-			_ = e.Encode(s.respJson)
+			_ = e.Encode(s.respJSON)
 			fmt.Println("")
 		}
 	}
-	return s.respJson, nil
+	return s.respJSON, nil
 }
 
 func (s *TestSession) SetRespBytes(bytes []byte) {
 	s.RespBytes = bytes
-	s.respJson = nil
+	s.respJSON = nil
 }
 
 // StepModules is the list of functions used to add steps to a godog.ScenarioContext, you can
 // add more to this list if you need test TestSuite specific steps.
 var StepModules []func(ctx *godog.ScenarioContext, s *TestScenario)
 
-func (suite *TestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
-	s := &TestScenario{
-		Suite:     suite,
+func (s *TestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
+	ts := &TestScenario{
+		Suite:     s,
 		sessions:  map[string]*TestSession{},
 		Variables: map[string]interface{}{},
-		Db:        suite.Db,
+		DB:        s.DB,
 	}
 
 	for _, module := range StepModules {
-		module(ctx, s)
+		module(ctx, ts)
 	}
 }
 
@@ -271,8 +270,8 @@ func init() {
 // also runs it's tests.
 func RunSuite(path string, logger *zap.SugaredLogger, db *sqlx.DB, authenticator *auth.Auth, t *testing.T) {
 	s := &TestSuite{
-		ApiURL:        "http://localhost:3000",
-		Db:            db,
+		APIURL:        "http://localhost:3000",
+		DB:            db,
 		authenticator: authenticator,
 		users:         map[string]*TestUser{},
 		Logger:        logger,

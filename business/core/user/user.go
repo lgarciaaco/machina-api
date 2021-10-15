@@ -156,8 +156,8 @@ func (c Core) QueryByID(ctx context.Context, userID string) (User, error) {
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
-func (c Core) Authenticate(ctx context.Context, now time.Time, usrId, password string) (auth.Claims, error) {
-	dbUsr, err := c.store.QueryByID(ctx, usrId)
+func (c Core) Authenticate(ctx context.Context, now time.Time, usrID, password string) (auth.Claims, error) {
+	dbUsr, err := c.store.QueryByID(ctx, usrID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return auth.Claims{}, ErrNotFound

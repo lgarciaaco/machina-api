@@ -1,3 +1,4 @@
+// Package db contains candle related CRUD functionality.
 package db
 
 import (
@@ -11,9 +12,10 @@ import (
 
 // Agent manages the set of API's for candle access.
 type Agent struct {
-	log *zap.SugaredLogger
-	tr  database.Transactor
-	db  sqlx.ExtContext
+	log          *zap.SugaredLogger
+	tr           database.Transactor
+	db           sqlx.ExtContext
+	isWithinTran bool
 }
 
 // NewAgent constructs a data for api access.
@@ -22,6 +24,24 @@ func NewAgent(log *zap.SugaredLogger, db *sqlx.DB) Agent {
 		log: log,
 		tr:  db,
 		db:  db,
+	}
+}
+
+// WithinTran runs passed function and do commit/rollback at the end.
+func (s Agent) WithinTran(ctx context.Context, fn func(sqlx.ExtContext) error) error {
+	if s.isWithinTran {
+		return fn(s.db)
+	}
+	return database.WithinTran(ctx, s.log, s.tr, fn)
+}
+
+// Tran return new Agent with transaction in it.
+func (s Agent) Tran(tx sqlx.ExtContext) Agent {
+	return Agent{
+		log:          s.log,
+		tr:           s.tr,
+		db:           tx,
+		isWithinTran: true,
 	}
 }
 

@@ -66,9 +66,9 @@ func (h Handlers) QueryBySymbolAndInterval(ctx context.Context, w http.ResponseW
 
 // QueryByID returns a candle by its ID.
 func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	cdlId := web.Param(r, "id")
+	cdlID := web.Param(r, "id")
 
-	usr, err := h.Candle.QueryByID(ctx, cdlId)
+	usr, err := h.Candle.QueryByID(ctx, cdlID)
 	if err != nil {
 		switch {
 		case errors.Is(err, candle.ErrInvalidID):
@@ -76,7 +76,7 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		case errors.Is(err, candle.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", cdlId, err)
+			return fmt.Errorf("ID[%s]: %w", cdlID, err)
 		}
 	}
 

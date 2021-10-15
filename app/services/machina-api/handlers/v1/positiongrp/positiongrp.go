@@ -1,3 +1,4 @@
+// Package positiongrp maintains the group of handlers for position access.
 package positiongrp
 
 import (
@@ -117,21 +118,21 @@ func (h Handlers) Close(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	posId := web.Param(r, "id")
+	posID := web.Param(r, "id")
 
 	// If you are not an admin and looking to delete someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != posId {
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != posID {
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	if err := h.Position.Close(ctx, posId); err != nil {
+	if err := h.Position.Close(ctx, posID); err != nil {
 		switch {
 		case errors.Is(err, user.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
 		case errors.Is(err, user.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", posId, err)
+			return fmt.Errorf("ID[%s]: %w", posID, err)
 		}
 	}
 

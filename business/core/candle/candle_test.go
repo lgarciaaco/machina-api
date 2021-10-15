@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCandle(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testcandle")
+	log, db, teardown := dbtest.NewUnit(t, c, "testcdl")
 	t.Cleanup(teardown)
 
 	core := NewCore(log, db)
@@ -73,7 +73,7 @@ func TestCandle(t *testing.T) {
 }
 
 func TestPagingCandle(t *testing.T) {
-	log, db, teardown := dbtest.NewUnit(t, c, "testcandle")
+	log, db, teardown := dbtest.NewUnit(t, c, "testcdlpg")
 	t.Cleanup(teardown)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

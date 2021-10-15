@@ -154,7 +154,7 @@ Feature: Users api
     {"name": "some_name", "password": "some_password", "password_confirm": "some_password", "roles": ["ADMIN"]}
     """
     Then the response code should be 201
-    Given I store the ".id" selection from the response as ${nUsrId}
+    Given I store the ".id" selection from the response as ${nusrID}
     And the response should match json:
     """
     {
@@ -168,7 +168,7 @@ Feature: Users api
     }
     """
 
-    When I GET path "/users/${nUsrId}"
+    When I GET path "/users/${nusrID}"
     Then the response code should be 200
     And the response should match json:
     """
@@ -183,11 +183,11 @@ Feature: Users api
     }
     """
 
-    When I PUT path "/users/${nUsrId}" with json body:
+    When I PUT path "/users/${nusrID}" with json body:
     """
     {"name": "some_other_name"}
     """
     Then the response code should be 204
 
-    When I DELETE path "/users/${nUsrId}"
+    When I DELETE path "/users/${nusrID}"
     Then the response code should be 204

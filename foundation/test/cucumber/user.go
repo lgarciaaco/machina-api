@@ -1,11 +1,3 @@
-// Creating a user in a random organization:
-//      Given a user named "Bob"
-// Creating a user in a given organization:
-//      Given a user named "Jimmy" in organization "13639843"
-// Logging into a user session:
-//      Given I am logged in as "Jimmy"
-// Setting the Authorization header of the current user session:
-//      Given I set the Authorization header to "Bearer ${agent_token}"
 package cucumber
 
 import (
@@ -29,20 +21,20 @@ func init() {
 	})
 }
 
-func (s *TestSuite) verifyUserAndPassword(usrId string, password string) error {
+func (s *TestSuite) verifyUserAndPassword(usrID string, password string) error {
 	// users are shared concurrently across scenarios.. so lock while we create the user...
 	s.Mu.Lock()
 	defer s.Mu.Unlock()
 
-	if s.users[usrId] != nil {
+	if s.users[usrID] != nil {
 		return nil
 	}
 
 	ctx := context.Background()
 	now := time.Now()
 
-	core := user.NewCore(s.Logger, s.Db)
-	u, err := core.QueryByID(ctx, usrId)
+	core := user.NewCore(s.Logger, s.DB)
+	u, err := core.QueryByID(ctx, usrID)
 	if err != nil {
 		return errors.Wrap(err, "retrieving user")
 	}
@@ -57,8 +49,8 @@ func (s *TestSuite) verifyUserAndPassword(usrId string, password string) error {
 		return err
 	}
 
-	s.users[usrId] = &TestUser{
-		Name:  usrId,
+	s.users[usrID] = &TestUser{
+		Name:  usrID,
 		Token: token,
 		Ctx:   context.WithValue(context.Background(), ContextAccessToken, token),
 	}
