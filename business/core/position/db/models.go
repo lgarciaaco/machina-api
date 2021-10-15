@@ -15,4 +15,5 @@ type Position struct {
 	CreationTime time.Time `db:"creation_time"` // CreationTime of the position
 	User         string    `db:"user"`
 	Symbol       string    `db:"symbol"`
+	Orders       string    `db:"orders"`
 }

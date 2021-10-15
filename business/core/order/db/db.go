@@ -11,15 +11,17 @@ import (
 
 // Agent manages the set of API's for candle access.
 type Agent struct {
-	log    *zap.SugaredLogger
-	sqlxDB *sqlx.DB
+	log *zap.SugaredLogger
+	tr  database.Transactor
+	db  sqlx.ExtContext
 }
 
 // NewAgent constructs a data for api access.
-func NewAgent(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Agent {
+func NewAgent(log *zap.SugaredLogger, db *sqlx.DB) Agent {
 	return Agent{
-		log:    log,
-		sqlxDB: sqlxDB,
+		log: log,
+		tr:  db,
+		db:  db,
 	}
 }
 
@@ -31,7 +33,7 @@ func (s Agent) Create(ctx context.Context, odr Order) error {
 	VALUES
 		(:order_id, :symbol_id, :position_id, :price, :quantity, :status, :type, :side, :creation_time)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.sqlxDB, q, odr); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, odr); err != nil {
 		return fmt.Errorf("inserting order: %w", err)
 	}
 
@@ -58,7 +60,7 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Or
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var odrs []Order
-	if err := database.NamedQuerySlice(ctx, s.log, s.sqlxDB, q, data, &odrs); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &odrs); err != nil {
 		return nil, fmt.Errorf("selecting orders: %w", err)
 	}
 
@@ -82,7 +84,7 @@ func (s Agent) QueryByID(ctx context.Context, odrId string) (Order, error) {
 		order_id = :order_id`
 
 	var odr Order
-	if err := database.NamedQueryStruct(ctx, s.log, s.sqlxDB, q, data, &odr); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &odr); err != nil {
 		return Order{}, fmt.Errorf("selecting odrId[%q]: %w", odrId, err)
 	}
 
@@ -108,7 +110,7 @@ func (s Agent) QueryByPosition(ctx context.Context, odrId string) ([]Order, erro
 		creation_time`
 
 	var ords []Order
-	if err := database.NamedQuerySlice(ctx, s.log, s.sqlxDB, q, data, &ords); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &ords); err != nil {
 		return []Order{}, fmt.Errorf("selecting odrId[%q]: %w", odrId, err)
 	}
 

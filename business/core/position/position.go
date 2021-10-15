@@ -18,6 +18,8 @@ var (
 	ErrNotFound              = errors.New("position not found")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrAlreadyClosed         = errors.New("can't close a position that is already closed")
+	ErrInvalidOrderFormat    = errors.New("order format can't be marshalled")
 )
 
 // Core manages the set of API's for candle access.
@@ -95,4 +97,32 @@ func (c Core) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, 
 	}
 
 	return toPositionSlice(dbPoss), nil
+}
+
+// Close closes a position identified by a given ID.
+// Closing a position consist on figuring out the open balance and creating a position
+// to set balance to 0.
+func (c Core) Close(ctx context.Context, posId string) error {
+	if err := validate.CheckID(posId); err != nil {
+		return ErrInvalidID
+	}
+
+	dbPos, err := c.agent.QueryByID(ctx, posId)
+	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("updating product posId[%s]: %w", posId, err)
+	}
+
+	if dbPos.Status == "closed" {
+		return ErrAlreadyClosed
+	}
+	dbPos.Status = "closed"
+
+	if err := c.agent.Update(ctx, dbPos); err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
+
+	return nil
 }

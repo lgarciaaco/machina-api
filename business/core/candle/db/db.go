@@ -11,15 +11,17 @@ import (
 
 // Agent manages the set of API's for candle access.
 type Agent struct {
-	log    *zap.SugaredLogger
-	sqlxDB *sqlx.DB
+	log *zap.SugaredLogger
+	tr  database.Transactor
+	db  sqlx.ExtContext
 }
 
 // NewAgent constructs a data for api access.
-func NewAgent(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Agent {
+func NewAgent(log *zap.SugaredLogger, db *sqlx.DB) Agent {
 	return Agent{
-		log:    log,
-		sqlxDB: sqlxDB,
+		log: log,
+		tr:  db,
+		db:  db,
 	}
 }
 
@@ -31,7 +33,7 @@ func (s Agent) Create(ctx context.Context, cdl Candle) error {
 	VALUES
 		(:candle_id, :symbol, :interval, :open_time, :open_price, :close_time, :close_price, :low, :high, :volume)`
 
-	if err := database.NamedExecContext(ctx, s.log, s.sqlxDB, q, cdl); err != nil {
+	if err := database.NamedExecContext(ctx, s.log, s.db, q, cdl); err != nil {
 		return fmt.Errorf("inserting candle: %w", err)
 	}
 
@@ -58,7 +60,7 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Ca
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var cdls []Candle
-	if err := database.NamedQuerySlice(ctx, s.log, s.sqlxDB, q, data, &cdls); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &cdls); err != nil {
 		return nil, fmt.Errorf("selecting candle: %w", err)
 	}
 
@@ -91,7 +93,7 @@ func (s Agent) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, row
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var cdls []Candle
-	if err := database.NamedQuerySlice(ctx, s.log, s.sqlxDB, q, data, &cdls); err != nil {
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &cdls); err != nil {
 		return nil, fmt.Errorf("selecting candles [%q]: %w", smb, err)
 	}
 
@@ -115,7 +117,7 @@ func (s Agent) QueryByID(ctx context.Context, cdlID string) (Candle, error) {
 		candle_id = :candle_id`
 
 	var cdl Candle
-	if err := database.NamedQueryStruct(ctx, s.log, s.sqlxDB, q, data, &cdl); err != nil {
+	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &cdl); err != nil {
 		return Candle{}, fmt.Errorf("selecting cdlID[%q]: %w", cdlID, err)
 	}
 

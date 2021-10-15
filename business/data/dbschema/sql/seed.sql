@@ -18,6 +18,15 @@ INSERT INTO symbols (symbol_id, symbol, status, base_asset, base_asset_precision
 INSERT INTO positions (position_id, user_id, symbol_id, creation_time, side, status) VALUES
     ('891c178b-3dbf-4f99-a8f0-99a86cb578b7', '45b5fbd3-755f-4379-8f07-a58d4a30fa2f', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '2019-01-01 00:00:01.000001+00', 'SELL', 'closed'),
     ('989efd27-3da5-43ba-abf5-89dabcf4d298', '45b5fbd3-755f-4379-8f07-a58d4a30fa2f', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '2019-02-01 00:00:01.000001+00', 'SELL', 'closed'),
-    ('028300d6-6892-44b5-aa1b-17b8a7717ead', '45b5fbd3-755f-4379-8f07-a58d4a30fa2f', '5f25aa33-e294-4353-92b4-246e3bacdfc7', '2019-03-01 00:00:01.000001+00', 'SELL', 'closed'),
-    ('75fabb5c-6c22-40c6-9236-0f8017a8e12d', '5cf37266-3473-4006-984f-9325122678b7', '5f25aa33-e294-4353-92b4-246e3bacdfc7', '2019-04-01 00:00:01.000001+00', 'SELL', 'closed')
+    ('028300d6-6892-44b5-aa1b-17b8a7717ead', '45b5fbd3-755f-4379-8f07-a58d4a30fa2f', '5f25aa33-e294-4353-92b4-246e3bacdfc7', '2019-03-01 00:00:01.000001+00', 'SELL', 'open'),
+    ('75fabb5c-6c22-40c6-9236-0f8017a8e12d', '5cf37266-3473-4006-984f-9325122678b7', '5f25aa33-e294-4353-92b4-246e3bacdfc7', '2019-04-01 00:00:01.000001+00', 'SELL', 'open')
+    ON CONFLICT DO NOTHING;
+
+INSERT INTO orders (order_id, symbol_id, position_id, price, quantity, status, type, side, creation_time) VALUES
+    ('ef984be8-da66-4d52-b659-591b95d92591', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '891c178b-3dbf-4f99-a8f0-99a86cb578b7', 1500, 2, 'FILLED', 'MARKET', 'SELL', '2019-04-01 00:00:01.000001+00'),
+    ('813e5b67-d408-4271-84d3-d0587f17dae7', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '891c178b-3dbf-4f99-a8f0-99a86cb578b7', 1600, 2, 'FILLED', 'MARKET', 'BUY', '2019-05-01 00:00:01.000001+00'),
+    ('0e5c467e-c953-4638-a4b1-eead302d7b47', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '989efd27-3da5-43ba-abf5-89dabcf4d298', 1300, 3, 'FILLED', 'MARKET', 'SELL', '2019-04-02 00:00:01.000001+00'),
+    ('55d147fe-c39c-431f-9bca-3c42dd6619cd', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '989efd27-3da5-43ba-abf5-89dabcf4d298', 1350, 3, 'FILLED', 'MARKET', 'BUY', '2019-04-03 00:00:01.000001+00'),
+    ('9ec42f42-6413-48e8-ac65-80f6d83b9b1c', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '028300d6-6892-44b5-aa1b-17b8a7717ead', 1250, 1, 'FILLED', 'MARKET', 'BUY', '2019-05-03 00:00:01.000001+00'),
+    ('8a89e4ec-4b51-44ac-be9f-f15910d93682', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '75fabb5c-6c22-40c6-9236-0f8017a8e12d', 1510, 4, 'FILLED', 'MARKET', 'BUY', '2019-06-03 00:00:01.000001+00')
     ON CONFLICT DO NOTHING;
