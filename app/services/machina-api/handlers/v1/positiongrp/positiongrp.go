@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/lgarciaaco/machina-api/business/core/user"
+	"github.com/lgarciaaco/machina-api/business/core/order"
 
 	v1Web "github.com/lgarciaaco/machina-api/business/web/v1"
 
@@ -20,28 +20,34 @@ import (
 // Handlers manages the set of position endpoints.
 type Handlers struct {
 	Position position.Core
+	Order    order.Core
 	Auth     *auth.Auth
 }
 
 // Create adds a new position to the system.
 func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	v, err := web.GetValues(ctx)
+	if err != nil {
+		return web.NewShutdownError("web value missing from context")
+	}
+
 	claims, err := auth.GetClaims(ctx)
 	if err != nil {
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	var nPos position.Position
+	var nPos position.NewPosition
 	if err := web.Decode(r, &nPos); err != nil {
 		return fmt.Errorf("unable to decode payload: %w", err)
 	}
 	nPos.UserID = claims.Subject
 
-	usr, err := h.Position.Create(ctx, nPos)
+	sPos, err := h.Position.Create(ctx, nPos, v.Now)
 	if err != nil {
-		return fmt.Errorf("user[%+v]: %w", &usr, err)
+		return fmt.Errorf("positions[%+v]: %w", &sPos, err)
 	}
 
-	return web.Respond(ctx, w, usr, http.StatusCreated)
+	return web.Respond(ctx, w, sPos, http.StatusCreated)
 }
 
 // Query returns a list of positions with paging. If an administrator is
@@ -89,26 +95,26 @@ func (h Handlers) QueryByID(ctx context.Context, w http.ResponseWriter, r *http.
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
-	userID := web.Param(r, "id")
+	posID := web.Param(r, "id")
 
-	// If you are not an admin and looking to retrieve someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != userID {
-		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
-	}
-
-	usr, err := h.Position.QueryByID(ctx, userID)
+	pos, err := h.Position.QueryByID(ctx, posID)
 	if err != nil {
 		switch {
-		case errors.Is(err, user.ErrInvalidID):
+		case errors.Is(err, position.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case errors.Is(err, user.ErrNotFound):
+		case errors.Is(err, position.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
-			return fmt.Errorf("ID[%s]: %w", userID, err)
+			return fmt.Errorf("ID[%s]: %w", posID, err)
 		}
 	}
 
-	return web.Respond(ctx, w, usr, http.StatusOK)
+	// If you are not an admin and looking to retrieve someone other than yourself.
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != pos.UserID {
+		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
+	return web.Respond(ctx, w, pos, http.StatusOK)
 }
 
 // Close closes a position setting its balance to 0. Positions persist in database.
@@ -120,16 +126,28 @@ func (h Handlers) Close(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	posID := web.Param(r, "id")
 
+	pos, err := h.Position.QueryByID(ctx, posID)
+	if err != nil {
+		switch {
+		case errors.Is(err, position.ErrInvalidID):
+			return v1Web.NewRequestError(err, http.StatusBadRequest)
+		case errors.Is(err, position.ErrNotFound):
+			return v1Web.NewRequestError(err, http.StatusNotFound)
+		default:
+			return fmt.Errorf("ID[%s]: %w", posID, err)
+		}
+	}
+
 	// If you are not an admin and looking to delete someone other than yourself.
-	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != posID {
+	if !claims.Authorized(auth.RoleAdmin) && claims.Subject != pos.UserID {
 		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
 	}
 
 	if err := h.Position.Close(ctx, posID); err != nil {
 		switch {
-		case errors.Is(err, user.ErrInvalidID):
+		case errors.Is(err, position.ErrInvalidID):
 			return v1Web.NewRequestError(err, http.StatusBadRequest)
-		case errors.Is(err, user.ErrNotFound):
+		case errors.Is(err, position.ErrNotFound):
 			return v1Web.NewRequestError(err, http.StatusNotFound)
 		default:
 			return fmt.Errorf("ID[%s]: %w", posID, err)

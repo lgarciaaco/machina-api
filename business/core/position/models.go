@@ -22,6 +22,13 @@ type Position struct {
 	Orders       []Order   `json:"orders"`        // Orders belonging to this position
 }
 
+// NewPosition contains information needed to create a new position
+type NewPosition struct {
+	UserID   string `json:"user_id"`
+	SymbolID string `json:"symbol_id" validate:"required"`
+	Side     string `json:"side" validate:"required"`
+}
+
 // Order represent an order in a position
 type Order struct {
 	ID           string    `json:"order_id"`
@@ -41,7 +48,7 @@ type orderTime time.Time
 
 func toPosition(dbPos db.Position) Position {
 	var ords []Order
-	if dbPos.Orders != "" {
+	if dbPos.Orders != "" && dbPos.Orders != "[null]" {
 		if err := json.Unmarshal([]byte(dbPos.Orders), &ords); err != nil {
 			return Position{}
 		}
@@ -52,7 +59,7 @@ func toPosition(dbPos db.Position) Position {
 		SymbolID:     dbPos.SymbolID,
 		UserID:       dbPos.UserID,
 		Side:         dbPos.Side,
-		Status:       dbPos.Side,
+		Status:       dbPos.Status,
 		CreationTime: dbPos.CreationTime,
 		User:         dbPos.User,
 		Symbol:       dbPos.Symbol,
@@ -66,6 +73,10 @@ func toPositionSlice(dbPoss []db.Position) []Position {
 		poss[i] = toPosition(dbPos)
 	}
 	return poss
+}
+
+func (ot orderTime) Equal(cmp orderTime) bool {
+	return true
 }
 
 func (ot orderTime) MarshalJSON() ([]byte, error) {

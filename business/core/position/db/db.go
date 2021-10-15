@@ -183,7 +183,7 @@ func (s Agent) Update(ctx context.Context, pos Position) error {
 	UPDATE
 		positions
 	SET
-		"status" = :status,
+		"status" = :status
 	WHERE
 		position_id = :position_id`
 

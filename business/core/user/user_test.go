@@ -78,9 +78,9 @@ func TestUser(t *testing.T) {
 
 			saved, err = core.QueryByID(ctx, usr.ID)
 			if err != nil {
-				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by Email : %s.", dbtest.Failed, testID, err)
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve user by ID : %s.", dbtest.Failed, testID, err)
 			}
-			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by Email.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve user by ID.", dbtest.Success, testID)
 
 			if saved.Name != *upd.Name {
 				t.Errorf("\t%s\tTest %d:\tShould be able to see updates to Name.", dbtest.Failed, testID)

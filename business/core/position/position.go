@@ -17,11 +17,12 @@ import (
 
 // Set of error variables for CRUD operations.
 var (
-	ErrNotFound              = errors.New("position not found")
-	ErrAuthenticationFailure = errors.New("authentication failed")
-	ErrInvalidID             = errors.New("ID is not in its proper form")
-	ErrAlreadyClosed         = errors.New("can't close a position that is already closed")
-	ErrInvalidOrderFormat    = errors.New("order format can't be marshalled")
+	ErrNotFound      = errors.New("position not found")
+	ErrInvalidID     = errors.New("ID is not in its proper form")
+	ErrAlreadyClosed = errors.New("can't close a position that is already closed")
+
+	CLOSED = "CLOSED"
+	OPEN   = "OPEN"
 )
 
 // Core manages the set of API's for candle access.
@@ -37,7 +38,7 @@ func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
 }
 
 // Create inserts a new position into the database.
-func (c Core) Create(ctx context.Context, nPos Position) (Position, error) {
+func (c Core) Create(ctx context.Context, nPos NewPosition, now time.Time) (Position, error) {
 	if err := validate.Check(nPos); err != nil {
 		return Position{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -47,15 +48,21 @@ func (c Core) Create(ctx context.Context, nPos Position) (Position, error) {
 		SymbolID:     nPos.SymbolID,
 		UserID:       nPos.UserID,
 		Side:         nPos.Side,
-		Status:       nPos.Status,
-		CreationTime: time.Now(),
+		Status:       OPEN,
+		CreationTime: now,
 	}
 
 	if err := c.agent.Create(ctx, dbPos); err != nil {
 		return Position{}, fmt.Errorf("create: %w", err)
 	}
 
-	return toPosition(dbPos), nil
+	// Load position with user and symbol
+	rPos, err := c.agent.QueryByID(ctx, dbPos.ID)
+	if err != nil {
+		return Position{}, ErrNotFound
+	}
+
+	return toPosition(rPos), nil
 }
 
 // Query gets the specified positions.
@@ -117,10 +124,10 @@ func (c Core) Close(ctx context.Context, posID string) error {
 		return fmt.Errorf("updating product posID[%s]: %w", posID, err)
 	}
 
-	if dbPos.Status == "closed" {
+	if dbPos.Status == CLOSED {
 		return ErrAlreadyClosed
 	}
-	dbPos.Status = "closed"
+	dbPos.Status = CLOSED
 
 	if err := c.agent.Update(ctx, dbPos); err != nil {
 		return fmt.Errorf("update: %w", err)
