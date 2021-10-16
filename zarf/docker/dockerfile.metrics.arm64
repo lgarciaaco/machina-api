@@ -20,11 +20,11 @@ COPY . /service
 # Build the service binary. We are doing this last since this will be different
 # every time we run through this process.
 WORKDIR /service/app/services/metrics
-RUN go build -ldflags "-X main.build=${BUILD_REF}"
+RUN GOOS=linux GOARCH=arm64 go build -ldflags "-X main.build=${BUILD_REF}"
 
 
 # Run the Go Binary in Alpine.
-FROM alpine:3.14
+FROM arm64v8/alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
 COPY --from=build_metrics /service/app/services/metrics/metrics /service/metrics

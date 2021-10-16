@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lgarciaaco/machina-api/business/core/order/db"
@@ -19,6 +20,9 @@ var (
 	ErrNotFound              = errors.New("order not found")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
+
+	// MARKET order is an order plan to instantly buy or sell at the best available price
+	MARKET = "MARKET"
 )
 
 // Core manages the set of API's for candle access.
@@ -34,7 +38,7 @@ func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
 }
 
 // Create inserts a new order into the database.
-func (c Core) Create(ctx context.Context, nOdr Order) (Order, error) {
+func (c Core) Create(ctx context.Context, nOdr NewOrder, now time.Time) (Order, error) {
 	if err := validate.Check(nOdr); err != nil {
 		return Order{}, fmt.Errorf("validating data: %w", err)
 	}
@@ -43,11 +47,11 @@ func (c Core) Create(ctx context.Context, nOdr Order) (Order, error) {
 		ID:           validate.GenerateID(),
 		SymbolID:     nOdr.SymbolID,
 		PositionID:   nOdr.PositionID,
-		CreationTime: nOdr.CreationTime,
+		CreationTime: now,
 		Price:        nOdr.Price,
 		Quantity:     nOdr.Quantity,
-		Status:       nOdr.Status,
-		Type:         nOdr.Type,
+		Status:       "opening",
+		Type:         MARKET,
 		Side:         nOdr.Side,
 	}
 

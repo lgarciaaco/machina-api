@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/lgarciaaco/machina-api/business/core/order"
-
 	v1Web "github.com/lgarciaaco/machina-api/business/web/v1"
 
 	"github.com/lgarciaaco/machina-api/business/core/position"
@@ -20,7 +18,6 @@ import (
 // Handlers manages the set of position endpoints.
 type Handlers struct {
 	Position position.Core
-	Order    order.Core
 	Auth     *auth.Auth
 }
 

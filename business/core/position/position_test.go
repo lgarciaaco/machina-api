@@ -38,7 +38,7 @@ func TestPosition(t *testing.T) {
 	{
 		testID := 0
 
-		t.Logf("\tTest %d:\tWhen handling a single Position.", testID)
+		t.Logf("\tTest %d:\tWhen handling a single Order.", testID)
 		{
 			ctx := context.Background()
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)

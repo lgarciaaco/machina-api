@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.17 as build_sales-api
+FROM golang:1.17 as build_machina-api
 ENV CGO_ENABLED 0
 ARG BUILD_REF
 
@@ -19,7 +19,7 @@ WORKDIR /service/app/tooling/sales-admin
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
-WORKDIR /service/app/services/sales-api
+WORKDIR /service/app/services/machina-api
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 
@@ -27,15 +27,14 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}"
 FROM alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
-COPY --from=build_sales-api /service/zarf/keys/. /service/zarf/keys/.
-COPY --from=build_sales-api /service/app/tooling/sales-admin/sales-admin /service/sales-admin
-COPY --from=build_sales-api /service/app/services/sales-api/sales-api /service/sales-api
+COPY --from=build_machina-api /service/zarf/keys/. /service/zarf/keys/.
+COPY --from=build_machina-api /service/app/tooling/sales-admin/sales-admin /service/sales-admin
+COPY --from=build_machina-api /service/app/services/machina-api/machina-api /service/machina-api
 WORKDIR /service
-CMD ["./sales-api"]
+CMD ["./machina-api"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="sales-api" \
-      org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
-      org.opencontainers.image.source="https://github.com/lgarciaaco/machina-api/app/sales-api" \
+      org.opencontainers.image.title="machina-api" \
+      org.opencontainers.image.authors="Luis Garcia Acosta <lgarciaac@gmail.com>" \
+      org.opencontainers.image.source="https://github.com/lgarciaaco/machina-api/app/machina-api" \
       org.opencontainers.image.revision="${BUILD_REF}" \
-      org.opencontainers.image.vendor="Ardan Labs"

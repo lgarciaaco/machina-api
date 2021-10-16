@@ -31,25 +31,57 @@ SHELL := /bin/bash
 
 # $(shell git rev-parse --short HEAD)
 VERSION := 1.0
+PROJECT := "lgarciaac"
 
-all: sales metrics
+all: build push
 
-sales:
+build: build-api build-api-arm build-metrics build-metrics-arm
+
+push: push-api push-api-arm push-metrics push-metrics-arm
+
+build-api:
 	docker build \
-		-f zarf/docker/dockerfile.sales-api \
-		-t sales-api-amd64:$(VERSION) \
+		-f zarf/docker/dockerfile.machina-api \
+		-t $(PROJECT)/machina-api:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
-metrics:
+build-api-arm:
+	docker build \
+		-f zarf/docker/dockerfile.machina-api.arm64 \
+		-t $(PROJECT)/machina-api:$(VERSION)-arm64 \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		.
+
+build-metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
-		-t metrics-amd64:$(VERSION) \
+		-t $(PROJECT)/machina-metrics:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
+build-metrics-arm:
+	docker build \
+		-f zarf/docker/dockerfile.metrics.arm64 \
+		-t $(PROJECT)/machina-metrics:$(VERSION)-arm64 \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		.
+
+push-api:
+	docker push $(PROJECT)/machina-api:$(VERSION)
+
+push-api-arm:
+	docker push $(PROJECT)/machina-api:$(VERSION)-arm64
+
+push-metrics:
+	docker push $(PROJECT)/machina-metrics:$(VERSION)
+
+push-metrics-arm:
+	docker push $(PROJECT)/machina-metrics:$(VERSION)-arm64
 # ==============================================================================
 # Running from within k8s/kind
 
@@ -162,8 +194,8 @@ seed: migrate
 # Running tests within the local computer
 
 test:
+	go vet ./...
 	go test ./... -count=1
-	staticcheck -checks=all ./...
 
 # ==============================================================================
 # Modules support
