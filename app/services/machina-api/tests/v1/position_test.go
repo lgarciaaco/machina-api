@@ -125,10 +125,10 @@ func (pt *PositionTests) postPosition401(t *testing.T) {
 	// Not setting the Authorization header.
 	pt.app.ServeHTTP(w, r)
 
-	t.Log("Given the need to validate a new position can't be created with an invalid document.")
+	t.Log("Given the need to validate a new position can't be created unless the calling user is authenticated.")
 	{
 		testID := 0
-		t.Logf("\tTest %d:\tWhen using an incomplete position value.", testID)
+		t.Logf("\tTest %d:\tWhen creating a new position without being authenticated.", testID)
 		{
 			if w.Code != http.StatusUnauthorized {
 				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 401 for the response : %v", dbtest.Failed, testID, w.Code)
@@ -337,7 +337,7 @@ func (pt *PositionTests) crudPosition(t *testing.T) {
 	pt.getPosition200(t, nu.ID)
 }
 
-// postUser201 validates a user can be created with the endpoint.
+// postPosition201 validates a position can be created with the endpoint.
 func (pt *PositionTests) postPosition201(t *testing.T) position.Position {
 	nPos := position.NewPosition{
 		SymbolID: "125240c0-7f7f-4d0f-b30d-939fd93cf027",
@@ -387,7 +387,7 @@ func (pt *PositionTests) postPosition201(t *testing.T) position.Position {
 	return got
 }
 
-// getUser200 validates a position request for an existing positionID.
+// getPosition200 validates a position request for an existing positionID.
 func (pt *PositionTests) getPosition200(t *testing.T, id string) {
 	r := httptest.NewRequest(http.MethodGet, "/v1/positions/"+id, nil)
 	w := httptest.NewRecorder()

@@ -5,6 +5,9 @@ package v1
 import (
 	"net/http"
 
+	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/ordergrp"
+	"github.com/lgarciaaco/machina-api/business/core/order"
+
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/positiongrp"
 	"github.com/lgarciaaco/machina-api/business/core/position"
 
@@ -62,4 +65,12 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle(http.MethodGet, version, "/positions/:id", pos.QueryByID, authen)
 	app.Handle(http.MethodPost, version, "/positions", pos.Create, authen)
 	app.Handle(http.MethodDelete, version, "/positions/:id", pos.Close, authen)
+
+	// Register order endpoints
+	odr := ordergrp.Handlers{
+		Order:    order.NewCore(cfg.Log, cfg.DB),
+		Position: position.NewCore(cfg.Log, cfg.DB),
+	}
+	app.Handle(http.MethodPost, version, "/orders", odr.Create, authen)
+	app.Handle(http.MethodGet, version, "/orders/:id", odr.QueryByID, authen)
 }

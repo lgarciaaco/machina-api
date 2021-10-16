@@ -48,17 +48,14 @@ func TestOrder(t *testing.T) {
 			ctx := context.Background()
 
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
-			nOdr := Order{
-				SymbolID:     "125240c0-7f7f-4d0f-b30d-939fd93cf027",
-				PositionID:   "75fabb5c-6c22-40c6-9236-0f8017a8e12d",
-				CreationTime: now,
-				Price:        0,
-				Quantity:     0,
-				Status:       "FILLED",
-				Type:         "MARKET",
-				Side:         "SELL",
+			nOdr := NewOrder{
+				SymbolID:   "125240c0-7f7f-4d0f-b30d-939fd93cf027",
+				PositionID: "75fabb5c-6c22-40c6-9236-0f8017a8e12d",
+				Price:      2,
+				Quantity:   2,
+				Side:       "SELL",
 			}
-			odr, err := core.Create(ctx, nOdr)
+			odr, err := core.Create(ctx, nOdr, now)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create order : %s.", dbtest.Failed, testID, err)
 			}
