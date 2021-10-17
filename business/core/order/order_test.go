@@ -3,8 +3,12 @@ package order
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/lgarciaaco/machina-api/business/broker"
+	"github.com/lgarciaaco/machina-api/business/broker/encode"
 
 	"github.com/lgarciaaco/machina-api/foundation/docker"
 
@@ -30,6 +34,16 @@ func TestMain(m *testing.M) {
 }
 
 func TestOrder(t *testing.T) {
+	key, present := os.LookupEnv("MACHINA_BROKER_BINANCE_KEY")
+	if !present {
+		t.Skipf("skipping order tests, environment variable MACHINA_BROKER_BINANCE_KEY is required")
+	}
+
+	secret, present := os.LookupEnv("MACHINA_BROKER_BINANCE_SECRET")
+	if !present {
+		t.Skipf("skipping order tests, environment variable MACHINA_BROKER_BINANCE_KEY is required")
+	}
+
 	log, db, teardown := dbtest.NewUnit(t, c, "testodr")
 	t.Cleanup(teardown)
 
@@ -38,7 +52,11 @@ func TestOrder(t *testing.T) {
 
 	dbschema.Seed(ctx, db)
 
-	core := NewCore(log, db)
+	core := NewCore(log, db, broker.TestBinance{
+		Endpoint: "order",
+		APIKey:   key,
+		Signer:   &encode.Hmac{Key: []byte(secret)},
+	})
 
 	t.Log("Given the need to work with Order records.")
 	{
@@ -50,10 +68,10 @@ func TestOrder(t *testing.T) {
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 			nOdr := NewOrder{
 				SymbolID:   "125240c0-7f7f-4d0f-b30d-939fd93cf027",
+				Symbol:     "ETHUSDT",
 				PositionID: "75fabb5c-6c22-40c6-9236-0f8017a8e12d",
-				Price:      2,
-				Quantity:   2,
-				Side:       "SELL",
+				Quantity:   0.01,
+				Side:       "BUY",
 			}
 			odr, err := core.Create(ctx, nOdr, now)
 			if err != nil {

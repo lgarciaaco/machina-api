@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lgarciaaco/machina-api/business/core/order/binance"
+
+	"github.com/lgarciaaco/machina-api/business/broker"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lgarciaaco/machina-api/business/core/order/db"
 	"github.com/lgarciaaco/machina-api/business/sys/database"
@@ -20,20 +24,19 @@ var (
 	ErrNotFound              = errors.New("order not found")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
-
-	// MARKET order is an order plan to instantly buy or sell at the best available price
-	MARKET = "MARKET"
 )
 
 // Core manages the set of API's for candle access.
 type Core struct {
-	agent db.Agent
+	dbAgent  db.Agent
+	bkrAgent binance.Agent
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB, brk broker.Broker) Core {
 	return Core{
-		agent: db.NewAgent(log, sqlxDB),
+		dbAgent:  db.NewAgent(log, sqlxDB),
+		bkrAgent: binance.NewAgent(log, brk),
 	}
 }
 
@@ -43,19 +46,31 @@ func (c Core) Create(ctx context.Context, nOdr NewOrder, now time.Time) (Order, 
 		return Order{}, fmt.Errorf("validating data: %w", err)
 	}
 
+	// Create order with the broker
+	bkrOdr := binance.Order{
+		Symbol:   nOdr.Symbol,
+		Side:     nOdr.Side,
+		Type:     broker.OrderTypeMarket,
+		Quantity: nOdr.Quantity,
+	}
+	or, err := c.bkrAgent.Create(ctx, bkrOdr)
+	if err != nil {
+		return Order{}, fmt.Errorf("create: %w", err)
+	}
+
 	dbOdr := db.Order{
 		ID:           validate.GenerateID(),
 		SymbolID:     nOdr.SymbolID,
 		PositionID:   nOdr.PositionID,
 		CreationTime: now,
-		Price:        nOdr.Price,
+		Price:        or.Price,
 		Quantity:     nOdr.Quantity,
-		Status:       "opening",
-		Type:         MARKET,
+		Status:       or.Status,
+		Type:         broker.OrderTypeMarket,
 		Side:         nOdr.Side,
 	}
 
-	if err := c.agent.Create(ctx, dbOdr); err != nil {
+	if err := c.dbAgent.Create(ctx, dbOdr); err != nil {
 		return Order{}, fmt.Errorf("create: %w", err)
 	}
 
@@ -68,7 +83,7 @@ func (c Core) QueryByID(ctx context.Context, odrID string) (Order, error) {
 		return Order{}, ErrInvalidID
 	}
 
-	odr, err := c.agent.QueryByID(ctx, odrID)
+	odr, err := c.dbAgent.QueryByID(ctx, odrID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Order{}, ErrNotFound

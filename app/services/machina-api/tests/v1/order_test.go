@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lgarciaaco/machina-api/business/broker"
+	"github.com/lgarciaaco/machina-api/business/broker/encode"
+
 	"github.com/lgarciaaco/machina-api/business/core/order"
 
 	"github.com/google/go-cmp/cmp"
@@ -31,10 +34,26 @@ type OrderTests struct {
 
 // TestOrders is the entry point for testing order management functions.
 func TestOrders(t *testing.T) {
+	key, present := os.LookupEnv("MACHINA_BROKER_BINANCE_KEY")
+	if !present {
+		t.Skipf("skipping order tests, environment variable MACHINA_BROKER_BINANCE_KEY is required")
+	}
+
+	secret, present := os.LookupEnv("MACHINA_BROKER_BINANCE_SECRET")
+	if !present {
+		t.Skipf("skipping order tests, environment variable MACHINA_BROKER_BINANCE_KEY is required")
+	}
+
 	t.Parallel()
 
 	test := dbtest.NewIntegration(t, c, "inttestorders")
 	t.Cleanup(test.Teardown)
+
+	broker := broker.TestBinance{
+		Endpoint: "order",
+		APIKey:   key,
+		Signer:   &encode.Hmac{Key: []byte(secret)},
+	}
 
 	shutdown := make(chan os.Signal, 1)
 	tests := OrderTests{
@@ -43,6 +62,7 @@ func TestOrders(t *testing.T) {
 			Log:      test.Log,
 			Auth:     test.Auth,
 			DB:       test.DB,
+			Broker:   broker,
 		}),
 		userToken:  test.Token("45b5fbd3-755f-4379-8f07-a58d4a30fa2f", "gophers"),
 		adminToken: test.Token("5cf37266-3473-4006-984f-9325122678b7", "gophers"),
@@ -93,7 +113,6 @@ func (ot *OrderTests) postOrder400(t *testing.T) {
 			fields := validate.FieldErrors{
 				{Field: "quantity", Error: "quantity is a required field"},
 				{Field: "side", Error: "side is a required field"},
-				{Field: "price", Error: "price is a required field"},
 			}
 			exp := v1Web.ErrorResponse{
 				Error:  "data validation error",
@@ -219,7 +238,6 @@ func (ot *OrderTests) postOrder201(t *testing.T) order.Order {
 	nOdr := order.NewOrder{
 		PositionID: "75fabb5c-6c22-40c6-9236-0f8017a8e12d",
 		Quantity:   2,
-		Price:      1450,
 		Side:       "SELL",
 	}
 
@@ -254,12 +272,12 @@ func (ot *OrderTests) postOrder201(t *testing.T) order.Order {
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like ID and Dates so we copy u.
 			exp := got
-			exp.Status = "opening"
+			exp.Status = "FILLED"
 			exp.Side = "SELL"
 			exp.SymbolID = "5f25aa33-e294-4353-92b4-246e3bacdfc7"
 			exp.Type = "MARKET"
 			exp.Quantity = 2
-			exp.Price = 1450
+			exp.Price = 3997.8
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)

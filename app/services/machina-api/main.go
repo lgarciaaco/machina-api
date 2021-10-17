@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lgarciaaco/machina-api/business/broker/encode"
+
+	"github.com/lgarciaaco/machina-api/business/broker"
+
 	"github.com/ardanlabs/conf/v2"
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers"
 	"github.com/lgarciaaco/machina-api/business/sys/auth"
@@ -91,6 +95,10 @@ func run(log *zap.SugaredLogger) error {
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
+		Broker struct {
+			BinanceKey    string `conf:"mask,required"`
+			BinanceSecret string `conf:"mask,required"`
+		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://localhost:9411/api/v2/spans"`
 			ServiceName string  `conf:"default:sales-api"`
@@ -103,7 +111,7 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	const prefix = "MACHINA-API"
+	const prefix = "MACHINA"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
@@ -142,6 +150,14 @@ func run(log *zap.SugaredLogger) error {
 	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
 	if err != nil {
 		return fmt.Errorf("constructing auth: %w", err)
+	}
+
+	// =========================================================================
+	// Binance broker support
+	broker := broker.Binance{
+		Endpoint: "order",
+		APIKey:   cfg.Broker.BinanceKey,
+		Signer:   &encode.Hmac{Key: []byte(cfg.Broker.BinanceSecret)},
 	}
 
 	// =========================================================================
@@ -217,6 +233,7 @@ func run(log *zap.SugaredLogger) error {
 		Log:      log,
 		Auth:     auth,
 		DB:       db,
+		Broker:   broker,
 	})
 
 	// Construct a server to service the requests against the mux.

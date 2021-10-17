@@ -8,6 +8,8 @@ import (
 	"net/http/pprof"
 	"os"
 
+	"github.com/lgarciaaco/machina-api/business/broker"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/debug/checkgrp"
 	v1 "github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1"
@@ -35,6 +37,7 @@ type APIMuxConfig struct {
 	Log      *zap.SugaredLogger
 	Auth     *auth.Auth
 	DB       *sqlx.DB
+	Broker   broker.Broker
 }
 
 // APIMux constructs an http.Handler with all application routes defined.
@@ -65,9 +68,10 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 
 	// Load the v1 routes.
 	v1.Routes(app, v1.Config{
-		Log:  cfg.Log,
-		Auth: cfg.Auth,
-		DB:   cfg.DB,
+		Log:    cfg.Log,
+		Auth:   cfg.Auth,
+		DB:     cfg.DB,
+		Broker: cfg.Broker,
 	})
 
 	return app

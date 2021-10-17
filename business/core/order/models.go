@@ -22,10 +22,10 @@ type Order struct {
 // NewOrder contains information needed to create a new Order.
 type NewOrder struct {
 	PositionID string  `json:"position_id" validate:"required"`
-	Quantity   float64 `json:"quantity" validate:"required"`
-	Price      float64 `json:"price" validate:"required"`
-	Side       string  `json:"side" validate:"required"`
 	SymbolID   string  `json:"-"`
+	Symbol     string  `json:"-"`
+	Quantity   float64 `json:"quantity" validate:"required"`
+	Side       string  `json:"side" validate:"required"`
 }
 
 func toOrder(dbOdr db.Order) Order {
