@@ -154,7 +154,7 @@ func NamedExecContext(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtCo
 }
 
 // NamedQuerySlice is a helper function for executing queries that return a
-// collection of data to be unmarshaled into a slice.
+// collection of data to be unmarshalled into a slice.
 func NamedQuerySlice(ctx context.Context, log *zap.SugaredLogger, db sqlx.ExtContext, query string, data interface{}, dest interface{}) error {
 	q := queryString(query, data)
 	log.Infow("database.NamedQuerySlice", "traceid", web.GetTraceID(ctx), "query", q)

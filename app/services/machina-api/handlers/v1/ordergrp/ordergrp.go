@@ -45,6 +45,7 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return v1Web.NewRequestError(position.ErrNotFound, http.StatusNotFound)
 	}
 	nOdr.SymbolID = pos.SymbolID
+	nOdr.Symbol = pos.Symbol
 
 	// If you are not an admin and looking to create an order for a position that doesn't belong
 	// to you

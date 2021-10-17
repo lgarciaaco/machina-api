@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Agent manages the set of API's for candle access.
+// Agent manages the set of API's for order access.
 type Agent struct {
 	log          *zap.SugaredLogger
 	tr           database.Transactor

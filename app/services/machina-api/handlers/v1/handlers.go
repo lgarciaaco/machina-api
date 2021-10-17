@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/ordergrp"
+	"github.com/lgarciaaco/machina-api/business/broker"
 	"github.com/lgarciaaco/machina-api/business/core/order"
 
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/positiongrp"
@@ -25,9 +26,10 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Log  *zap.SugaredLogger
-	Auth *auth.Auth
-	DB   *sqlx.DB
+	Log    *zap.SugaredLogger
+	Auth   *auth.Auth
+	DB     *sqlx.DB
+	Broker broker.Broker
 }
 
 // Routes binds all the version 1 routes.
@@ -68,7 +70,7 @@ func Routes(app *web.App, cfg Config) {
 
 	// Register order endpoints
 	odr := ordergrp.Handlers{
-		Order:    order.NewCore(cfg.Log, cfg.DB),
+		Order:    order.NewCore(cfg.Log, cfg.DB, cfg.Broker),
 		Position: position.NewCore(cfg.Log, cfg.DB),
 	}
 	app.Handle(http.MethodPost, version, "/orders", odr.Create, authen)
