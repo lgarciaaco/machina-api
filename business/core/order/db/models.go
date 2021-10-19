@@ -5,7 +5,7 @@ import "time"
 // Order defines a trading order
 type Order struct {
 	ID           string    `db:"order_id"`      // Order ID
-	SymbolID     string    `db:"symbol_id"`     // Symbol ID, this orders trades on
+	SymbolID     string    `db:"symbol_id"`     // SymbolID ID, this orders trades on
 	PositionID   string    `db:"position_id"`   // Order ID this order belongs to
 	CreationTime time.Time `db:"creation_time"` // Order creation time
 	Price        float64   `db:"price"`         // Price of the base asset

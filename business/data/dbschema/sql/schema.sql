@@ -17,7 +17,7 @@ CREATE TABLE users
 CREATE TABLE candles
 (
     candle_id   UUID,
-    symbol      TEXT,
+    symbol_id   UUID,
     interval    TEXT,
     open_time   TIMESTAMP,
     open_price  FLOAT,
@@ -27,7 +27,8 @@ CREATE TABLE candles
     low         FLOAT,
     volume      FLOAT,
 
-    PRIMARY KEY (candle_id)
+    PRIMARY KEY (candle_id),
+    UNIQUE (open_time, symbol_id, interval)
 );
 
 CREATE TABLE symbols

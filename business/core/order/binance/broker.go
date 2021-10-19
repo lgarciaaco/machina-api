@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/lgarciaaco/machina-api/business/broker"
 	"go.uber.org/zap"
@@ -29,11 +30,12 @@ func NewAgent(log *zap.SugaredLogger, brk broker.Broker) Agent {
 // Create dispatch a POST broker call attempting to create a MARKET order. It returns the
 // broker response
 func (a Agent) Create(cxt context.Context, nOdr Order) (or OrderResponse, err error) {
-	bncResp, err := a.broker.Request(cxt, http.MethodPost,
+	bncResp, err := a.broker.Request(cxt, http.MethodPost, "order",
 		"symbol", nOdr.Symbol,
 		"side", nOdr.Side,
 		"type", nOdr.Type,
-		"quantity", strconv.FormatFloat(nOdr.Quantity, 'f', -1, 64))
+		"quantity", strconv.FormatFloat(nOdr.Quantity, 'f', -1, 64),
+		"timestamp", strconv.FormatInt(unixMillis(time.Now()), 10))
 	if err != nil {
 		return OrderResponse{}, fmt.Errorf("creating order %w", err)
 	}
@@ -56,4 +58,8 @@ func (a Agent) Create(cxt context.Context, nOdr Order) (or OrderResponse, err er
 	odrResp.Price = price / float64(len(odrResp.Fills))
 
 	return odrResp, nil
+}
+
+func unixMillis(t time.Time) int64 {
+	return t.UnixNano() / int64(time.Millisecond)
 }

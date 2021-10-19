@@ -155,9 +155,8 @@ func run(log *zap.SugaredLogger) error {
 	// =========================================================================
 	// Binance broker support
 	broker := broker.Binance{
-		Endpoint: "order",
-		APIKey:   cfg.Broker.BinanceKey,
-		Signer:   &encode.Hmac{Key: []byte(cfg.Broker.BinanceSecret)},
+		APIKey: cfg.Broker.BinanceKey,
+		Signer: &encode.Hmac{Key: []byte(cfg.Broker.BinanceSecret)},
 	}
 
 	// =========================================================================

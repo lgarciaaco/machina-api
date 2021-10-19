@@ -5,42 +5,46 @@ package broker
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/lgarciaaco/machina-api/business/broker/encode"
-	"github.com/pkg/errors"
 )
 
-type Broker interface {
-	Request(ctx context.Context, method string, keysAndValues ...string) (rd io.Reader, err error)
-}
+var (
+	ErrBrokerNotFound        = errors.New("not found")
+	ErrBrokerDuplicatedEntry = errors.New("duplicated entry")
+)
 
 const (
 	OrderTypeMarket    = "MARKET"
 	MaxIdleConnections = 10
 	IdleConnTimeout    = 30 * time.Second
 	TestNet            = "https://testnet.binance.vision/api/v3"
+	APIV3              = "https://api.binance.com/api/v3"
 )
+
+type Broker interface {
+	Request(ctx context.Context, method, endpoint string, keysAndValues ...string) (rd io.Reader, err error)
+}
 
 // Binance manages calls to binance api v3
 type Binance struct {
-	Endpoint string        // Endpoint: ping, time, orders ...
-	APIKey   string        // APIKey is required for calls that need authentication
-	Signer   encode.Signer // Signer is used to encode calls to binance that include sensitive data, like APIKey
+	APIKey string        // APIKey is required for calls that need authentication
+	Signer encode.Signer // Signer is used to encode calls to binance that include sensitive data, like APIKey
 }
 
 // Request convert a bunch of key-value pairs into an url query, it takes the api endpoint
 // and builds the binance api request. It returns the body of the response
-func (as Binance) Request(ctx context.Context, method string, keysAndValues ...string) (rd io.Reader, err error) {
+func (as Binance) Request(ctx context.Context, method, endpoint string, keysAndValues ...string) (rd io.Reader, err error) {
 	// form the api request url
-	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s?", TestNet, as.Endpoint), nil)
+	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s?", TestNet, endpoint), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create request")
+		return nil, fmt.Errorf("unable to create request %w", err)
 	}
 
 	q := req.URL.Query()
@@ -55,7 +59,6 @@ func (as Binance) Request(ctx context.Context, method string, keysAndValues ...s
 		q.Add(key, val)
 		i += 2
 	}
-	q.Add("timestamp", strconv.FormatInt(unixMillis(time.Now()), 10))
 
 	// If there is an Api key defined we include it in the header
 	if as.APIKey != "" {
@@ -100,6 +103,10 @@ func (as Binance) Request(ctx context.Context, method string, keysAndValues ...s
 	return r, nil
 }
 
-func unixMillis(t time.Time) int64 {
-	return t.UnixNano() / int64(time.Millisecond)
+// ToTime takes a Binance time format (milliseconds) and return
+// a time.Time object
+func ToTime(ut float64) time.Time {
+	t := time.UnixMilli(int64(ut))
+	tf := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
+	return tf
 }

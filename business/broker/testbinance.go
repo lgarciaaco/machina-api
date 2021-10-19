@@ -5,33 +5,30 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/lgarciaaco/machina-api/business/broker/encode"
-	"github.com/pkg/errors"
 )
 
 // TestBinance manages calls to binance test api v3 if the endpoint
 // has an test api. Currently, only order endpoint has a test api
 type TestBinance struct {
-	Endpoint string        // Endpoint: ping, time, orders ...
-	APIKey   string        // APIKey is required for calls that need authentication
-	Signer   encode.Signer // Signer is used to encode calls to binance that include sensitive data, like APIKey
+	APIKey string        // APIKey is required for calls that need authentication
+	Signer encode.Signer // Signer is used to encode calls to binance that include sensitive data, like APIKey
 }
 
 // Request convert a bunch of key-value pairs into an url query, it takes the api endpoint
 // and builds the binance api request. It returns the body of the response
-func (as TestBinance) Request(ctx context.Context, method string, keysAndValues ...string) (rd io.Reader, err error) {
-	if as.Endpoint != "order" {
-		return nil, fmt.Errorf("supported endpoints [order] but got [%s]", as.Endpoint)
+func (as TestBinance) Request(ctx context.Context, method, endpoint string, keysAndValues ...string) (rd io.Reader, err error) {
+	if endpoint == "order" {
+		endpoint = endpoint + "/test"
 	}
 
 	// form the api request url
-	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s/%s?", TestNet, as.Endpoint, "test"), nil)
+	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s", APIV3, endpoint), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create request")
+		return nil, fmt.Errorf("unable to create request %w", err)
 	}
 
 	q := req.URL.Query()
@@ -46,7 +43,6 @@ func (as TestBinance) Request(ctx context.Context, method string, keysAndValues 
 		q.Add(key, val)
 		i += 2
 	}
-	q.Add("timestamp", strconv.FormatInt(unixMillis(time.Now()), 10))
 
 	// If there is an Api key defined we include it in the header
 	if as.APIKey != "" {
@@ -81,8 +77,21 @@ func (as TestBinance) Request(ctx context.Context, method string, keysAndValues 
 		return nil, fmt.Errorf("status code [%d] out of range, expecting 200 <= status code <= 299", resp.StatusCode)
 	}
 
+	// If the endpoint is order, there is no response sent from test api, we need
+	// to fake a response
+	if endpoint == "order/test" {
+		return as.fakeResponse(), nil
+	}
+
 	// finally, return the reader for the body
-	return as.fakeResponse(), nil
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("creating reader %w", err)
+	}
+	r := bytes.NewReader(b)
+
+	// finally, return the reader for the body
+	return r, nil
 }
 
 // Because test api doesnt return a response ...

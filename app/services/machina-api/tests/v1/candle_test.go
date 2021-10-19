@@ -58,7 +58,7 @@ func TestCandles(t *testing.T) {
 	t.Run("getCandle200", tests.getCandle200)
 	t.Run("getCandle404", tests.getCandle404)
 	t.Run("getCandles200", tests.getCandles200)
-	t.Run("getCandles200", tests.getCandlesWithWrongSymbol200)
+	t.Run("getCandles200", tests.getCandles400)
 	t.Run("getCandles200", tests.getCandlesWithWrongInterval200)
 }
 
@@ -137,7 +137,7 @@ func (pt *CandleTests) getCandle200(t *testing.T) {
 // getCandles200 validates a request for a list of candles with correct data.
 // The list should be ordered and new candles should come first
 func (pt *CandleTests) getCandles200(t *testing.T) {
-	symbol := "ETHUSDT"
+	symbol := "125240c0-7f7f-4d0f-b30d-939fd93cf027"
 	interval := "4h"
 	pageNumber, rowsPerPage := 1, 1
 
@@ -183,9 +183,8 @@ func (pt *CandleTests) getCandles200(t *testing.T) {
 	}
 }
 
-// getCandlesWithWrongInterval200 validates a request for a list of candles with wrong symbol.
-// When wrong symbol is provided the app should return 200 and empty array.
-func (pt *CandleTests) getCandlesWithWrongSymbol200(t *testing.T) {
+// getCandles400 validates a request for a list of candles with wrong symbol_id.
+func (pt *CandleTests) getCandles400(t *testing.T) {
 	symbol := "some_symbol"
 	interval := "4h"
 	pageNumber, rowsPerPage := 1, 1
@@ -200,28 +199,18 @@ func (pt *CandleTests) getCandlesWithWrongSymbol200(t *testing.T) {
 		testID := 0
 		t.Logf("\tTest %d:\tWhen using symbol %s and interval %s.", testID, symbol, interval)
 		{
-			if w.Code != http.StatusOK {
-				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", dbtest.Failed, testID, w.Code)
+			if w.Code != http.StatusBadRequest {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 400 for the response : %v", dbtest.Failed, testID, w.Code)
 			}
-			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 400 for the response.", dbtest.Success, testID)
 		}
-
-		var got []candle.Candle
-		if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
-			t.Fatalf("\t%s\tTest : %d\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
-		}
-
-		if len(got) != 0 {
-			t.Fatalf("\t%s\tTest : %d\tShouldn't get candles.", dbtest.Failed, testID)
-		}
-		t.Logf("\t%s\tTest : %d\tShouldn't get candles.", dbtest.Success, testID)
 	}
 }
 
 // getCandlesWithWrongInterval200 validates a request for a list of candles with wrong interval.
 // When wrong interval is provided the app should return 200 and empty array.
 func (pt *CandleTests) getCandlesWithWrongInterval200(t *testing.T) {
-	symbol := "ETHUSDT"
+	symbol := "125240c0-7f7f-4d0f-b30d-939fd93cf027"
 	interval := "13h"
 	pageNumber, rowsPerPage := 1, 1
 

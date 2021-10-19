@@ -50,7 +50,7 @@ Feature: Candles api
     ]
     """
 
-    When I GET path "/candles/ETHUSDT/4h/1/1"
+    When I GET path "/candles/125240c0-7f7f-4d0f-b30d-939fd93cf027/4h/1/1"
     Then the response code should be 200
     And the response should match json:
     """
@@ -90,13 +90,15 @@ Feature: Candles api
 
   Scenario: use wrong symbol and interval to list candles
     When I GET path "/candles/some_symbol/4h/1/1"
-    Then the response code should be 200
+    Then the response code should be 400
     And the response should match json:
     """
-    []
+    {
+      "error": "ID is not in its proper form"
+    }
     """
 
-    When I GET path "/candles/ETHUSDT/some_interval/1/1"
+    When I GET path "/candles/125240c0-7f7f-4d0f-b30d-939fd93cf027/some_interval/1/1"
     Then the response code should be 200
     And the response should match json:
     """
