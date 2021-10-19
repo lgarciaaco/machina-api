@@ -7,6 +7,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/lgarciaaco/machina-api/business/core/candle/binance"
+
+	"github.com/lgarciaaco/machina-api/business/broker"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lgarciaaco/machina-api/business/core/candle/db"
 	"github.com/lgarciaaco/machina-api/business/sys/database"
@@ -19,53 +23,54 @@ var (
 	ErrNotFound              = errors.New("candle not found")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrInvalidCandle         = errors.New("candle is not valid")
 )
 
 // Core manages the set of API's for candle access.
 type Core struct {
-	agent db.Agent
+	dbAgent  db.Agent
+	bkrAgent binance.Agent
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB, broker broker.Broker) Core {
 	return Core{
-		agent: db.NewAgent(log, sqlxDB),
+		dbAgent:  db.NewAgent(log, sqlxDB),
+		bkrAgent: binance.NewAgent(log, broker),
 	}
 }
 
 // Create inserts a new candle into the database.
-func (c Core) Create(ctx context.Context, nCdl Candle) (Candle, error) {
+func (c Core) Create(ctx context.Context, nCdl NewCandle) (Candle, error) {
 	if err := validate.Check(nCdl); err != nil {
 		return Candle{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbCdl := db.Candle{
-		ID:         validate.GenerateID(),
-		Symbol:     nCdl.Symbol,
-		Interval:   nCdl.Interval,
-		OpenTime:   nCdl.OpenTime,
-		OpenPrice:  nCdl.OpenPrice,
-		CloseTime:  nCdl.CloseTime,
-		ClosePrice: nCdl.ClosePrice,
-		High:       nCdl.High,
-		Low:        nCdl.Low,
-		Volume:     nCdl.Volume,
+	// Fetch candle from binance api
+	bkrCdls, err := c.bkrAgent.QueryBySymbolAndInterval(ctx, nCdl.Symbol, nCdl.Interval, 1)
+	if err != nil {
+		return Candle{}, ErrInvalidCandle
 	}
 
-	if err := c.agent.Create(ctx, dbCdl); err != nil {
-		return Candle{}, fmt.Errorf("create: %w", err)
+	// Insert candle into the database
+	dbCdl := *(*db.Candle)(&bkrCdls[0])
+	dbCdl.ID = validate.GenerateID()
+	dbCdl.SymbolID = nCdl.SymbolID
+
+	if err := c.dbAgent.Create(ctx, dbCdl); err != nil {
+		return Candle{}, fmt.Errorf("create candle in database: %w", err)
 	}
 
 	return toCandle(dbCdl), nil
 }
 
 // QueryByID gets the specified candle from the database.
-func (c Core) QueryByID(ctx context.Context, userID string) (Candle, error) {
-	if err := validate.CheckID(userID); err != nil {
+func (c Core) QueryByID(ctx context.Context, cdlID string) (Candle, error) {
+	if err := validate.CheckID(cdlID); err != nil {
 		return Candle{}, ErrInvalidID
 	}
 
-	cdl, err := c.agent.QueryByID(ctx, userID)
+	cdl, err := c.dbAgent.QueryByID(ctx, cdlID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Candle{}, ErrNotFound
@@ -78,7 +83,7 @@ func (c Core) QueryByID(ctx context.Context, userID string) (Candle, error) {
 
 // Query gets the specified candle from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Candle, error) {
-	dbCdl, err := c.agent.Query(ctx, pageNumber, rowsPerPage)
+	dbCdl, err := c.dbAgent.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return nil, ErrNotFound
@@ -90,8 +95,12 @@ func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Can
 }
 
 // QueryBySymbolAndInterval gets the specified candle from the database.
-func (c Core) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, rowsPerPage int, cSmb string, cItv string) ([]Candle, error) {
-	dbCdl, err := c.agent.QueryBySymbolAndInterval(ctx, pageNumber, rowsPerPage, cSmb, cItv)
+func (c Core) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, rowsPerPage int, sblID string, cItv string) ([]Candle, error) {
+	if err := validate.CheckID(sblID); err != nil {
+		return []Candle{}, ErrInvalidID
+	}
+
+	dbCdl, err := c.dbAgent.QueryBySymbolAndInterval(ctx, pageNumber, rowsPerPage, sblID, cItv)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return nil, ErrNotFound

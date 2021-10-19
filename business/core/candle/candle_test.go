@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lgarciaaco/machina-api/business/broker"
+
 	"github.com/lgarciaaco/machina-api/foundation/docker"
 
 	"github.com/google/go-cmp/cmp"
@@ -32,25 +34,18 @@ func TestCandle(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testcdl")
 	t.Cleanup(teardown)
 
-	core := NewCore(log, db)
+	core := NewCore(log, db, broker.TestBinance{})
 
 	t.Log("Given the need to work with Candle records.")
 	{
 		testID := 0
-		now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 		t.Logf("\tTest %d:\tWhen handling a single Candle.", testID)
 		{
 			ctx := context.Background()
-			nCdl := Candle{
-				Symbol:     "ETHUSDT",
-				Interval:   "4h",
-				OpenPrice:  213.4,
-				OpenTime:   now,
-				ClosePrice: 225,
-				CloseTime:  now,
-				High:       345,
-				Low:        221,
-				Volume:     4536456,
+			nCdl := NewCandle{
+				SymbolID: "125240c0-7f7f-4d0f-b30d-939fd93cf027",
+				Symbol:   "ETHUSDT",
+				Interval: "4h",
 			}
 			cdl, err := core.Create(ctx, nCdl)
 			if err != nil {
@@ -81,7 +76,7 @@ func TestPagingCandle(t *testing.T) {
 
 	dbschema.Seed(ctx, db)
 
-	candle := NewCore(log, db)
+	candle := NewCore(log, db, broker.Binance{})
 
 	t.Log("Given the need to page through Candle records.")
 	{
@@ -121,7 +116,7 @@ func TestPagingCandle(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould have different candles.", dbtest.Success, testID)
 
 			// Query by symbol and interval
-			cdl3, err := candle.QueryBySymbolAndInterval(ctx, 1, 1, "ETHUSDT", "4h")
+			cdl3, err := candle.QueryBySymbolAndInterval(ctx, 1, 1, "125240c0-7f7f-4d0f-b30d-939fd93cf027", "4h")
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve candles by symbol and interval for page 1 : %s.", dbtest.Failed, testID, err)
 			}
@@ -132,7 +127,7 @@ func TestPagingCandle(t *testing.T) {
 			}
 			t.Logf("\t%s\tTest %d:\tShould have a single candle by symbol and interval.", dbtest.Success, testID)
 
-			cdl4, err := candle.QueryBySymbolAndInterval(ctx, 2, 1, "ETHUSDT", "4h")
+			cdl4, err := candle.QueryBySymbolAndInterval(ctx, 2, 1, "125240c0-7f7f-4d0f-b30d-939fd93cf027", "4h")
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve candles by symbol and interval for page 2 : %s.", dbtest.Failed, testID, err)
 			}

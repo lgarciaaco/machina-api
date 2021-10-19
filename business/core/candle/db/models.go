@@ -6,6 +6,7 @@ import "time"
 // low, open, and closing prices of a security for a specific period
 type Candle struct {
 	ID         string    `db:"candle_id"`
+	SymbolID   string    `db:"symbol_id"`
 	Symbol     string    `db:"symbol"`
 	Interval   string    `db:"interval"`
 	OpenTime   time.Time `db:"open_time"`

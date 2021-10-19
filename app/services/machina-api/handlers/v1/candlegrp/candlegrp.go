@@ -58,7 +58,12 @@ func (h Handlers) QueryBySymbolAndInterval(ctx context.Context, w http.ResponseW
 
 	cdls, err := h.Candle.QueryBySymbolAndInterval(ctx, pageNumber, rowsPerPage, symbol, interval)
 	if err != nil {
-		return fmt.Errorf("unable to query for cdls: %w", err)
+		switch {
+		case errors.Is(err, candle.ErrInvalidID):
+			return v1Web.NewRequestError(err, http.StatusBadRequest)
+		default:
+			return fmt.Errorf("unable to query for cdls: %w", err)
+		}
 	}
 
 	return web.Respond(ctx, w, cdls, http.StatusOK)

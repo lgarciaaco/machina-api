@@ -49,9 +49,9 @@ func (s Agent) Tran(tx sqlx.ExtContext) Agent {
 func (s Agent) Create(ctx context.Context, cdl Candle) error {
 	const q = `
 	INSERT INTO candles
-		(candle_id, symbol, interval, open_time, open_price, close_time, close_price, low, high, volume)
+		(candle_id, symbol_id, interval, open_time, open_price, close_time, close_price, low, high, volume)
 	VALUES
-		(:candle_id, :symbol, :interval, :open_time, :open_price, :close_time, :close_price, :low, :high, :volume)`
+		(:candle_id, :symbol_id, :interval, :open_time, :open_price, :close_time, :close_price, :low, :high, :volume)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, cdl); err != nil {
 		return fmt.Errorf("inserting candle: %w", err)
@@ -72,9 +72,12 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Ca
 
 	const q = `
 	SELECT
-		*
+		c.*,
+		s.symbol
 	FROM
-		candles
+		candles AS c
+	LEFT JOIN
+		symbols AS s ON c.symbol_id = s.symbol_id
 	ORDER BY
 		close_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
@@ -88,14 +91,14 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Ca
 }
 
 // QueryBySymbolAndInterval gets the specified candles from the database.
-func (s Agent) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, rowsPerPage int, smb string, itv string) ([]Candle, error) {
+func (s Agent) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, rowsPerPage int, smbID string, itv string) ([]Candle, error) {
 	data := struct {
-		Symbol      string `db:"symbol"`
+		SymbolID    string `db:"symbol_id"`
 		Interval    string `db:"interval"`
 		Offset      int    `db:"offset"`
 		RowsPerPage int    `db:"rows_per_page"`
 	}{
-		Symbol:      smb,
+		SymbolID:    smbID,
 		Interval:    itv,
 		Offset:      (pageNumber - 1) * rowsPerPage,
 		RowsPerPage: rowsPerPage,
@@ -103,18 +106,21 @@ func (s Agent) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, row
 
 	const q = `
 	SELECT
-		*
+		c.*,
+		s.symbol
 	FROM
-		candles
+		candles AS c
+	LEFT JOIN
+		symbols AS s ON c.symbol_id = s.symbol_id
 	WHERE 
-		interval = :interval AND symbol = :symbol
+		interval = :interval AND c.symbol_id = :symbol_id
 	ORDER BY
 		close_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var cdls []Candle
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &cdls); err != nil {
-		return nil, fmt.Errorf("selecting candles [%q]: %w", smb, err)
+		return nil, fmt.Errorf("selecting candles [%q]: %w", smbID, err)
 	}
 
 	return cdls, nil
@@ -130,9 +136,12 @@ func (s Agent) QueryByID(ctx context.Context, cdlID string) (Candle, error) {
 
 	const q = `
 	SELECT
-		*
+		c.*,
+		s.symbol
 	FROM
-		candles
+		candles AS c
+	LEFT JOIN
+		symbols AS s ON c.symbol_id = s.symbol_id
 	WHERE 
 		candle_id = :candle_id`
 

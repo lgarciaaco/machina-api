@@ -21,15 +21,19 @@ type Symbol struct {
 	IsMarginTradingAllowed     bool   `json:"is_margin_trading_allowed"`
 }
 
+type NewSymbol struct {
+	Symbol string `json:"symbol" validate:"required"`
+}
+
 func toSymbol(dbSbl db.Symbol) Symbol {
 	pc := (*Symbol)(&dbSbl)
 	return *pc
 }
 
 func toSymbolSlice(dbSbls []db.Symbol) []Symbol {
-	cdls := make([]Symbol, len(dbSbls))
+	sbls := make([]Symbol, len(dbSbls))
 	for i, dbCdl := range dbSbls {
-		cdls[i] = toSymbol(dbCdl)
+		sbls[i] = toSymbol(dbCdl)
 	}
-	return cdls
+	return sbls
 }

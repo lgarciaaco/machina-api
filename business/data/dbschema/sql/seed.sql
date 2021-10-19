@@ -3,10 +3,10 @@ INSERT INTO users (user_id, name, roles, password_hash, date_created, date_updat
 	('45b5fbd3-755f-4379-8f07-a58d4a30fa2f', 'User Gopher', '{USER}', '$2a$10$9/XASPKBbJKVfCAZKDH.UuhsuALDr5vVm6VrYA9VFR8rccK86C1hW', '2019-03-24 00:00:00', '2019-03-24 00:00:00')
 	ON CONFLICT DO NOTHING;
 
-INSERT INTO candles (candle_id, symbol, interval, open_time, open_price, close_time, close_price, high, low, volume) VALUES
-    ('039eee35-7463-4dbd-ae91-0428f3b89c42', 'ETHUSDT', '4h', '2019-01-01 00:00:03.000001+00', 100.50, '2019-01-01 00:04:03.000001+00', 110.50, 111.00, 98.60, 13456.00),
-    ('01d92444-71a7-450f-8a1b-e488cb1a6973', 'ETHUSDT', '4h', '2019-01-01 00:04:03.000001+00', 200.50, '2019-01-01 00:08:03.000001+00', 210.50, 211.00, 198.60, 23456.00),
-    ('cd0f4919-2fe7-4808-8ba2-a1ea652cd591', 'ETHUSDT', '4h', '2019-01-01 00:08:03.000001+00', 200.50, '2019-01-01 00:09:03.000001+00', 310.50, 311.00, 398.60, 33456.00)
+INSERT INTO candles (candle_id, symbol_id, interval, open_time, open_price, close_time, close_price, high, low, volume) VALUES
+    ('039eee35-7463-4dbd-ae91-0428f3b89c42', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '4h', '2019-01-01 00:00:03.000001+00', 100.50, '2019-01-01 00:04:03.000001+00', 110.50, 111.00, 98.60, 13456.00),
+    ('01d92444-71a7-450f-8a1b-e488cb1a6973', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '4h', '2019-01-01 00:04:03.000001+00', 200.50, '2019-01-01 00:08:03.000001+00', 210.50, 211.00, 198.60, 23456.00),
+    ('cd0f4919-2fe7-4808-8ba2-a1ea652cd591', '125240c0-7f7f-4d0f-b30d-939fd93cf027', '4h', '2019-01-01 00:08:03.000001+00', 200.50, '2019-01-01 00:09:03.000001+00', 310.50, 311.00, 398.60, 33456.00)
     ON CONFLICT DO NOTHING;
 
 INSERT INTO symbols (symbol_id, symbol, status, base_asset, base_asset_precision, quote_asset, quote_precision, base_commission_precision, quote_commission_precision, iceberg_allowed, oco_allowed, quote_order_qty_market_allowed, is_spot_trading_allowed, is_margin_trading_allowed) VALUES

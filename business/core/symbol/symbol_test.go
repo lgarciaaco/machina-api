@@ -6,12 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lgarciaaco/machina-api/foundation/docker"
-
 	"github.com/google/go-cmp/cmp"
-
+	"github.com/lgarciaaco/machina-api/business/broker"
 	"github.com/lgarciaaco/machina-api/business/data/dbschema"
 	"github.com/lgarciaaco/machina-api/business/data/dbtest"
+	"github.com/lgarciaaco/machina-api/foundation/docker"
 )
 
 var c *docker.Container
@@ -28,57 +27,43 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestCandle(t *testing.T) {
+func TestSymbol(t *testing.T) {
 	log, db, teardown := dbtest.NewUnit(t, c, "testsbl")
 	t.Cleanup(teardown)
 
-	core := NewCore(log, db)
+	core := NewCore(log, db, broker.TestBinance{})
 
-	t.Log("Given the need to work with Symbol records.")
+	t.Log("Given the need to work with SymbolID records.")
 	{
 		testID := 0
-		t.Logf("\tTest %d:\tWhen handling a single Symbol.", testID)
+		t.Logf("\tTest %d:\tWhen handling a single SymbolID.", testID)
 		{
 			ctx := context.Background()
-			nSbl := Symbol{
-				Symbol:                     "BTCETH",
-				Status:                     "",
-				BaseAsset:                  "BTC",
-				BaseAssetPrecision:         1,
-				QuoteAsset:                 "ETH",
-				QuotePrecision:             1,
-				BaseCommissionPrecision:    1,
-				QuoteCommissionPrecision:   1,
-				IcebergAllowed:             true,
-				OcoAllowed:                 false,
-				QuoteOrderQtyMarketAllowed: true,
-				IsSpotTradingAllowed:       false,
-				IsMarginTradingAllowed:     false,
-			}
-			cdl, err := core.Create(ctx, nSbl)
+			symbol := "BNBUSDT"
+			sbl, err := core.Create(ctx, NewSymbol{Symbol: symbol})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create symbol : %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to create symbol.", dbtest.Success, testID)
 
-			saved, err := core.QueryByID(ctx, cdl.ID)
+			saved, err := core.QueryByID(ctx, sbl.ID)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve symbol by ID: %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve symbol by ID.", dbtest.Success, testID)
 
-			if diff := cmp.Diff(cdl, saved); diff != "" {
+			if diff := cmp.Diff(sbl, saved); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same symbol. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same symbol.", dbtest.Success, testID)
 
-			saved, err = core.QueryBySymbol(ctx, "BTCETH")
+			saved, err = core.QueryBySymbol(ctx, symbol)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve symbol by symbol: %s.", dbtest.Failed, testID, err)
 			}
 			t.Logf("\t%s\tTest %d:\tShould be able to retrieve symbol by symbol.", dbtest.Success, testID)
 
-			if diff := cmp.Diff(cdl, saved); diff != "" {
+			if diff := cmp.Diff(sbl, saved); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get back the same symbol. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get back the same symbol.", dbtest.Success, testID)
@@ -95,7 +80,7 @@ func TestPagingSymbol(t *testing.T) {
 
 	dbschema.Seed(ctx, db)
 
-	candle := NewCore(log, db)
+	candle := NewCore(log, db, broker.TestBinance{})
 
 	t.Log("Given the need to page through Symbols records.")
 	{

@@ -5,6 +5,9 @@ package v1
 import (
 	"net/http"
 
+	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/symbolgrp"
+	"github.com/lgarciaaco/machina-api/business/core/symbol"
+
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers/v1/ordergrp"
 	"github.com/lgarciaaco/machina-api/business/broker"
 	"github.com/lgarciaaco/machina-api/business/core/order"
@@ -51,9 +54,17 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, admin)
 	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, admin)
 
+	// Register symbol endpoints
+	sbl := symbolgrp.Handlers{
+		Symbol: symbol.NewCore(cfg.Log, cfg.DB, cfg.Broker),
+	}
+	app.Handle(http.MethodGet, version, "/symbols/:page/:rows", sbl.Query)
+	app.Handle(http.MethodGet, version, "/symbols/:id", sbl.QueryByID)
+	app.Handle(http.MethodPost, version, "/symbols", sbl.Create, authen)
+
 	// Register candle endpoints
 	cgh := candlegrp.Handlers{
-		Candle: candle.NewCore(cfg.Log, cfg.DB),
+		Candle: candle.NewCore(cfg.Log, cfg.DB, cfg.Broker),
 	}
 	app.Handle(http.MethodGet, version, "/candles/:page/:rows", cgh.Query)
 	app.Handle(http.MethodGet, version, "/candles/:symbol/:interval/:page/:rows", cgh.QueryBySymbolAndInterval)

@@ -50,9 +50,8 @@ func TestOrders(t *testing.T) {
 	t.Cleanup(test.Teardown)
 
 	broker := broker.TestBinance{
-		Endpoint: "order",
-		APIKey:   key,
-		Signer:   &encode.Hmac{Key: []byte(secret)},
+		APIKey: key,
+		Signer: &encode.Hmac{Key: []byte(secret)},
 	}
 
 	shutdown := make(chan os.Signal, 1)
@@ -68,12 +67,12 @@ func TestOrders(t *testing.T) {
 		adminToken: test.Token("5cf37266-3473-4006-984f-9325122678b7", "gophers"),
 	}
 
-	t.Run("postOrder400", tests.postOrder400)
-	t.Run("postOrder401", tests.postOrder401)
+	t.Run("postSymbol400", tests.postOrder400)
+	t.Run("postSymbol401", tests.postOrder401)
 	t.Run("postOrder403", tests.postOrder403)
 	t.Run("postOrder404", tests.postOrder404)
-	t.Run("getOrder400", tests.getOrder400)
-	t.Run("getOrder403", tests.getOrder403)
+	t.Run("getSymbol400", tests.getOrder400)
+	t.Run("getSymbol403", tests.getOrder403)
 	t.Run("getOrder404", tests.getOrder404)
 	t.Run("crudOrder", tests.crudOrder)
 }
@@ -255,7 +254,7 @@ func (ot *OrderTests) postOrder201(t *testing.T) order.Order {
 	// This needs to be returned for other dbtest.
 	var got order.Order
 
-	t.Log("Given the need to create a new order with the positions endpoint.")
+	t.Log("Given the need to create a new order with the orders endpoint.")
 	{
 		testID := 0
 		t.Logf("\tTest %d:\tWhen using the declared order value.", testID)
@@ -321,7 +320,7 @@ func (ot *OrderTests) getOrder404(t *testing.T) {
 	}
 }
 
-// crudPosition performs a complete test of CRUD against the api.
+// crudOrder performs a complete test of CRUD against the api.
 func (ot *OrderTests) crudOrder(t *testing.T) {
 	odr := ot.postOrder201(t)
 	ot.getOrder200(t, odr.ID)
@@ -391,7 +390,7 @@ func (ot *OrderTests) getOrder403(t *testing.T) {
 	}
 }
 
-// getPosition200 validates a position request for an existing positionID.
+// getOrder200 validates an order request for an existing orderID.
 func (ot *OrderTests) getOrder200(t *testing.T, id string) {
 	r := httptest.NewRequest(http.MethodGet, "/v1/orders/"+id, nil)
 	w := httptest.NewRecorder()

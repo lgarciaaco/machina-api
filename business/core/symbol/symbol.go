@@ -11,6 +11,8 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lgarciaaco/machina-api/business/broker"
+	"github.com/lgarciaaco/machina-api/business/core/symbol/binance"
 	"github.com/lgarciaaco/machina-api/business/core/symbol/db"
 	"github.com/lgarciaaco/machina-api/business/sys/database"
 	"github.com/lgarciaaco/machina-api/business/sys/validate"
@@ -22,45 +24,41 @@ var (
 	ErrNotFound              = errors.New("symbol not found")
 	ErrAuthenticationFailure = errors.New("authentication failed")
 	ErrInvalidID             = errors.New("ID is not in its proper form")
+	ErrInvalidSymbol         = errors.New("symbol is not valid")
 )
 
 // Core manages the set of API's for candle access.
 type Core struct {
-	agent db.Agent
+	dbAgent  db.Agent
+	bkrAgent binance.Agent
 }
 
 // NewCore constructs a core for user api access.
-func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB) Core {
+func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB, broker broker.Broker) Core {
 	return Core{
-		agent: db.NewAgent(log, sqlxDB),
+		dbAgent:  db.NewAgent(log, sqlxDB),
+		bkrAgent: binance.NewAgent(log, broker),
 	}
 }
 
-// Create inserts a new symbol into the database.
-func (c Core) Create(ctx context.Context, nSbl Symbol) (Symbol, error) {
+// Create fetch a symbol from the binance api and
+// inserts it into the database.
+func (c Core) Create(ctx context.Context, nSbl NewSymbol) (Symbol, error) {
 	if err := validate.Check(nSbl); err != nil {
 		return Symbol{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	dbSbl := db.Symbol{
-		ID:                         validate.GenerateID(),
-		Symbol:                     nSbl.Symbol,
-		Status:                     nSbl.Status,
-		BaseAsset:                  nSbl.BaseAsset,
-		BaseAssetPrecision:         nSbl.BaseAssetPrecision,
-		QuoteAsset:                 nSbl.QuoteAsset,
-		QuotePrecision:             nSbl.QuotePrecision,
-		BaseCommissionPrecision:    nSbl.BaseCommissionPrecision,
-		QuoteCommissionPrecision:   nSbl.BaseCommissionPrecision,
-		IcebergAllowed:             nSbl.IcebergAllowed,
-		OcoAllowed:                 nSbl.OcoAllowed,
-		QuoteOrderQtyMarketAllowed: nSbl.QuoteOrderQtyMarketAllowed,
-		IsSpotTradingAllowed:       nSbl.IsSpotTradingAllowed,
-		IsMarginTradingAllowed:     nSbl.IsMarginTradingAllowed,
+	// Fetch symbol from binance
+	bkrSbl, err := c.bkrAgent.QueryBySymbol(ctx, nSbl.Symbol)
+	if err != nil {
+		return Symbol{}, ErrInvalidSymbol
 	}
 
-	if err := c.agent.Create(ctx, dbSbl); err != nil {
-		return Symbol{}, fmt.Errorf("create: %w", err)
+	// Insert symbol into database
+	dbSbl := *(*db.Symbol)(&bkrSbl)
+	dbSbl.ID = validate.GenerateID()
+	if err := c.dbAgent.Create(ctx, dbSbl); err != nil {
+		return Symbol{}, fmt.Errorf("create symbol in database %w", err)
 	}
 
 	return toSymbol(dbSbl), nil
@@ -68,7 +66,7 @@ func (c Core) Create(ctx context.Context, nSbl Symbol) (Symbol, error) {
 
 // Query retrieves a list of existing symbols from the database.
 func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Symbol, error) {
-	dbSbls, err := c.agent.Query(ctx, pageNumber, rowsPerPage)
+	dbSbls, err := c.dbAgent.Query(ctx, pageNumber, rowsPerPage)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return nil, ErrNotFound
@@ -85,7 +83,7 @@ func (c Core) QueryByID(ctx context.Context, sblID string) (Symbol, error) {
 		return Symbol{}, ErrInvalidID
 	}
 
-	cdl, err := c.agent.QueryByID(ctx, sblID)
+	cdl, err := c.dbAgent.QueryByID(ctx, sblID)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Symbol{}, ErrNotFound
@@ -98,7 +96,7 @@ func (c Core) QueryByID(ctx context.Context, sblID string) (Symbol, error) {
 
 // QueryBySymbol gets the specified symbol from the database.
 func (c Core) QueryBySymbol(ctx context.Context, sSbl string) (Symbol, error) {
-	sbl, err := c.agent.QueryBySymbol(ctx, sSbl)
+	sbl, err := c.dbAgent.QueryBySymbol(ctx, sSbl)
 	if err != nil {
 		if errors.Is(err, database.ErrDBNotFound) {
 			return Symbol{}, ErrNotFound

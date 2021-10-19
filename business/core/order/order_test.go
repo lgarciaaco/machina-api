@@ -53,9 +53,8 @@ func TestOrder(t *testing.T) {
 	dbschema.Seed(ctx, db)
 
 	core := NewCore(log, db, broker.TestBinance{
-		Endpoint: "order",
-		APIKey:   key,
-		Signer:   &encode.Hmac{Key: []byte(secret)},
+		APIKey: key,
+		Signer: &encode.Hmac{Key: []byte(secret)},
 	})
 
 	t.Log("Given the need to work with Order records.")
