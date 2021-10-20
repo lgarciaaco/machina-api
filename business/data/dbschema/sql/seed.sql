@@ -11,8 +11,7 @@ INSERT INTO candles (candle_id, symbol_id, interval, open_time, open_price, clos
 
 INSERT INTO symbols (symbol_id, symbol, status, base_asset, base_asset_precision, quote_asset, quote_precision, base_commission_precision, quote_commission_precision, iceberg_allowed, oco_allowed, quote_order_qty_market_allowed, is_spot_trading_allowed, is_margin_trading_allowed) VALUES
     ('125240c0-7f7f-4d0f-b30d-939fd93cf027', 'ETHUSDT', 'TRADING', 'ETH', 1, 'USDT', 1, 1, 1, TRUE, TRUE, TRUE, TRUE, FALSE),
-    ('5f25aa33-e294-4353-92b4-246e3bacdfc7', 'BTCUSDT', 'TRADING', 'BTC', 1, 'USDT', 1, 1, 1, TRUE, TRUE, TRUE, TRUE, FALSE),
-    ('35aee552-a5bf-42a1-9d40-b6a9d4a5f342', 'XRPUSDT', 'TRADING', 'XRP', 1, 'USDT', 1, 1, 1, TRUE, TRUE, TRUE, TRUE, FALSE)
+    ('5f25aa33-e294-4353-92b4-246e3bacdfc7', 'BTCUSDT', 'TRADING', 'BTC', 1, 'USDT', 1, 1, 1, TRUE, TRUE, TRUE, TRUE, FALSE)
     ON CONFLICT DO NOTHING;
 
 INSERT INTO positions (position_id, user_id, symbol_id, creation_time, side, status) VALUES
