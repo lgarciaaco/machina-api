@@ -185,10 +185,10 @@ kind-database:
 # Administration
 
 migrate:
-	go run app/tooling/sales-admin/main.go migrate
+	go run app/tooling/machina-admin/main.go migrate
 
 seed: migrate
-	go run app/tooling/sales-admin/main.go seed
+	go run app/tooling/machina-admin/main.go seed
 
 # ==============================================================================
 # Running tests within the local computer
@@ -232,3 +232,8 @@ docker-clean:
 
 docker-kind-logs:
 	docker logs -f $(KIND_CLUSTER)-control-plane
+
+# ==============================================================================
+# Deploy the service
+deploy:
+	kustomize build zarf/k8s/kustomize/overlays/staging | kubectl apply -f -

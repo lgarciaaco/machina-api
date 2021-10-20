@@ -1,7 +1,7 @@
 # Binaries
-app/services/sales-api/sales-api
+app/services/sales-api/machina-api
 app/services/metrics/metrics
-app/tooling/sales-admin/sales-admin
+app/tooling/machina-admin/machina-admin
 app/tooling/sales-admin/logfmt
 
 # Mac
@@ -39,3 +39,5 @@ _testmain.go
 *.exe
 //*.test
 .vscode/tasks.json
+
+secret.yaml

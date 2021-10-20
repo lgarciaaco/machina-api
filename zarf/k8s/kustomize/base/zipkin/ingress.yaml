@@ -1,0 +1,13 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zipkin-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`machina-zipkin.local`)
+      kind: Rule
+      services:
+        - name: zipkin-service
+          port: 9411

@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strategy-mac-ethusdt-2h
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: strategy-mac-ethusdt-1h
+  template:
+    metadata:
+      name: strategy-mac-ethusdt-1h
+      labels:
+        app: strategy-mac-ethusdt-1h
+    spec:
+      containers:
+      - name: strategy-mac-ethusdt-1h
+        image: lgarciaac/strategy-moving-average-crossover:1.0-arm64
+        imagePullPolicy: Always
+        env:
+          - name: MAS_STRATEGY_INTERVAL
+            value: "2h"
+          - name: MAS_TRADER_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                name: strategy-moving-average-crossover-secret
+                key: MAS_TRADER_ENDPOINT
+          - name: MAS_TRADER_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: strategy-moving-average-crossover-secret
+                key: MAS_TRADER_USERNAME
+          - name: MAS_TRADER_PASSWORD_ETHUSDT_2h
+            valueFrom:
+              secretKeyRef:
+                name: strategy-moving-average-crossover-secret
+                key: MAS_TRADER_PASSWORD_ETHUSDT_2h
+        ports:
+        - name: internal
+          containerPort: 4001
+        resources:
+          limits:
+            memory: "100M"
+            cpu: "100m"
+          requests:
+            memory: "100M"
+            cpu: "50m"

@@ -46,7 +46,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("MACHINA-API")
+	log, err := logger.New("MACHINA_API")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -105,7 +105,7 @@ func run(log *zap.SugaredLogger) error {
 		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://localhost:9411/api/v2/spans"`
-			ServiceName string  `conf:"default:sales-api"`
+			ServiceName string  `conf:"default:machina-api"`
 			Probability float64 `conf:"default:0.05"`
 		}
 	}{
@@ -193,7 +193,7 @@ func run(log *zap.SugaredLogger) error {
 		Log:        log,
 		Symbol:     symbol.NewCore(log, db, broker),
 		Candle:     candle.NewCore(log, db, broker),
-		SyncPeriod: 5 * time.Second,
+		SyncPeriod: 10 * time.Second,
 	}
 	synchronizer.Run(sCtx)
 	defer func() {

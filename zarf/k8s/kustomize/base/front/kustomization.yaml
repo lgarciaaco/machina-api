@@ -1,0 +1,9 @@
+resources:
+  - ./ingress.yaml
+  - ./deployment.yaml
+  - ./service.yaml
+  - ./secret.yaml
+commonLabels:
+  app.kubernetes.io/component: frontend
+  app.kubernetes.io/name: front
+  app.kubernetes.io/version: "1.0"

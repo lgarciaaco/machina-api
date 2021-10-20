@@ -1,0 +1,7 @@
+resources:
+  - ../../base
+namespace: machina-staging
+commonLabels:
+  app.kubernetes.io/managed-by: machina
+  app.kubernetes.io/part-of: machina
+  environment: staging

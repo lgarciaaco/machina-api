@@ -15,7 +15,7 @@ ARG BUILD_REF
 COPY . /service
 
 # Build the admin binary.
-WORKDIR /service/app/tooling/sales-admin
+WORKDIR /service/app/tooling/machina-admin
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
@@ -28,7 +28,7 @@ FROM alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
 COPY --from=build_machina-api /service/zarf/keys/. /service/zarf/keys/.
-COPY --from=build_machina-api /service/app/tooling/sales-admin/sales-admin /service/sales-admin
+COPY --from=build_machina-api /service/app/tooling/machina-admin/machina-admin /service/machina-admin
 COPY --from=build_machina-api /service/app/services/machina-api/machina-api /service/machina-api
 WORKDIR /service
 CMD ["./machina-api"]

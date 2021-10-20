@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: machina-front-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: machina-front
+  template:
+    metadata:
+      labels:
+        app: machina-front
+    spec:
+      containers:
+        - name: machina-front
+          image: lgarciaac/machina-client:1.0-arm64
+          imagePullPolicy: Always
+          env:
+            - name: REACT_APP_TRADER_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: machina-front-secret
+                  key: REACT_APP_TRADER_ENDPOINT
+            - name: REACT_APP_TRADER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: machina-front-secret
+                  key: REACT_APP_TRADER_TOKEN
+          ports:
+            - name: web
+              containerPort: 80
