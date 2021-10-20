@@ -1,0 +1,13 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: trader-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`machina-trader.local`)
+      kind: Rule
+      services:
+        - name: api-service
+          port: 80

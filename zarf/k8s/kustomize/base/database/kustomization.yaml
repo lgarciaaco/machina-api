@@ -1,0 +1,10 @@
+resources:
+  - ./volume.yaml
+  - ./secret.yaml
+  - ./deployment.yaml
+  - ./service.yaml
+commonLabels:
+  app.kubernetes.io/component: database
+  app.kubernetes.io/instance: database
+  app.kubernetes.io/name: postgres
+  app.kubernetes.io/version: v13.2

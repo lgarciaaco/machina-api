@@ -1,0 +1,6 @@
+resources:
+  - ./namespace
+  - ./front
+  - ./database
+  - ./api
+  - ./zipkin

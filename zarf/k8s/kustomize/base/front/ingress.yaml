@@ -1,0 +1,13 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: front-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`machina-front.local`)
+      kind: Rule
+      services:
+        - name: machina-front-service
+          port: 80

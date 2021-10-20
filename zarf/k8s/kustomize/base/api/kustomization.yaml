@@ -1,0 +1,9 @@
+resources:
+  - ./secret.yaml
+  - ./deployment.yaml
+  - ./service.yaml
+  - ./ingress.yaml
+commonLabels:
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/name: trader
+  app.kubernetes.io/version: "1.0"

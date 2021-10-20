@@ -44,18 +44,20 @@ func (as TestBinance) Request(ctx context.Context, method, endpoint string, keys
 		i += 2
 	}
 
-	// If there is an Api key defined we include it in the header
-	if as.APIKey != "" {
-		req.Header.Add("X-MBX-APIKEY", as.APIKey)
-	}
-
-	// Add signature parameter if signature is defined
-	if as.Signer != nil {
-		signature, err := as.Signer.Sign([]byte(q.Encode()))
-		if err != nil {
-			return nil, fmt.Errorf("unable to sign")
+	if endpoint == "order" {
+		// If there is an Api key defined we include it in the header
+		if as.APIKey != "" {
+			req.Header.Add("X-MBX-APIKEY", as.APIKey)
 		}
-		q.Add("signature", signature)
+
+		// Add signature parameter if signature is defined
+		if as.Signer != nil {
+			signature, err := as.Signer.Sign([]byte(q.Encode()))
+			if err != nil {
+				return nil, fmt.Errorf("unable to sign")
+			}
+			q.Add("signature", signature)
+		}
 	}
 
 	req.URL.RawQuery = q.Encode()

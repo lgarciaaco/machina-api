@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf/v2"
-	"github.com/lgarciaaco/machina-api/app/tooling/sales-admin/commands"
+	"github.com/lgarciaaco/machina-api/app/tooling/machina-admin/commands"
 	"github.com/lgarciaaco/machina-api/business/sys/database"
 	"github.com/lgarciaaco/machina-api/foundation/logger"
 	"go.uber.org/zap"
@@ -58,7 +58,7 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	const prefix = "SALES"
+	const prefix = "ADMIN"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {

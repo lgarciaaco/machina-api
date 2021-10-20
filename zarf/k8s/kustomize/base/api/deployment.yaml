@@ -1,0 +1,123 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: machina-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: machina-api
+  template:
+    metadata:
+      name: machina-api
+      labels:
+        app: machina-api
+    spec:
+      initContainers:
+        - name: database-migrations
+          image: lgarciaac/machina-api:1.0-arm64
+          imagePullPolicy: Always
+          env:
+            - name: ADMIN_DB_SSL
+              value: disable
+            - name: ADMIN_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: machina-postgres-secret
+                  key: POSTGRES_USER
+            - name: ADMIN_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: machina-postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: ADMIN_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: machina-postgres-secret
+                  key: POSTGRES_DB
+            - name: ADMIN_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: machina-postgres-secret
+                  key: POSTGRES_ENDPOINT
+          command: [ "/bin/sh","-c" ]
+          args: [ "/service/machina-admin migrate; /service/machina-admin seed" ]
+      containers:
+      - name: metrics
+        image: lgarciaac/machina-metrics:1.0-arm64
+        ports:
+          - name: metrics
+            containerPort: 3001
+          - name: metrics-debug
+            containerPort: 4001
+      - name: machina-api
+        image: lgarciaac/machina-api:1.0-arm64
+        imagePullPolicy: Always
+        env:
+          - name: MACHINA_ZIPKIN_REPORTER_URI
+            value: "http://zipkin-service:9411/api/v2/spans"
+          - name: MACHINA_AUTH_KEYS_FOLDER
+            value: "/service/zarf/keys/"
+          - name: MACHINA_DB_SSL
+            value: disable
+          - name: MACHINA_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: machina-postgres-secret
+                key: POSTGRES_USER
+          - name: MACHINA_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: machina-postgres-secret
+                key: POSTGRES_PASSWORD
+          - name: MACHINA_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: machina-postgres-secret
+                key: POSTGRES_DB
+          - name: MACHINA_DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: machina-postgres-secret
+                key: POSTGRES_ENDPOINT
+          - name: MACHINA_BROKER_BINANCE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: trader-api
+                key: TRADER_API_KEY
+          - name: MACHINA_BROKER_BINANCE_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: trader-api
+                key: TRADER_API_SECRET_KEY
+        ports:
+          - name: machina-api
+            containerPort: 3000
+          - name: api-debug
+            containerPort: 4000
+        readinessProbe: # readiness probes mark the service available to accept traffic.
+          httpGet:
+            path: /debug/readiness
+            port: api-debug
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+          httpGet:
+            path: /debug/liveness
+            port: api-debug
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        resources:
+          limits:
+            memory: "200M"
+            cpu: "500m"
+          requests:
+            memory: "100M"
+            cpu: "200m"
