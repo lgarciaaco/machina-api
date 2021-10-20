@@ -44,7 +44,7 @@ func TestPosition(t *testing.T) {
 			now := time.Date(2018, time.October, 1, 0, 0, 0, 0, time.UTC)
 
 			nPos := NewPosition{
-				SymbolID: "35aee552-a5bf-42a1-9d40-b6a9d4a5f342", // SymbolID is seeded in db
+				SymbolID: "125240c0-7f7f-4d0f-b30d-939fd93cf027", // SymbolID is seeded in db
 				UserID:   "45b5fbd3-755f-4379-8f07-a58d4a30fa2f", // UserID is seeded in db
 				Side:     "BUY",
 			}

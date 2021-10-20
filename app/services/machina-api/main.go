@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lgarciaaco/machina-api/app/services/machina-api/sync"
+	"github.com/lgarciaaco/machina-api/business/core/candle"
+	"github.com/lgarciaaco/machina-api/business/core/symbol"
+
 	"github.com/lgarciaaco/machina-api/business/broker/encode"
 
 	"github.com/lgarciaaco/machina-api/business/broker"
@@ -183,6 +187,21 @@ func run(log *zap.SugaredLogger) error {
 	}()
 
 	// =========================================================================
+	// Sync support
+	sCtx, sCancel := context.WithCancel(context.Background())
+	synchronizer := sync.CandleSynchronizer{
+		Log:        log,
+		Symbol:     symbol.NewCore(log, db, broker),
+		Candle:     candle.NewCore(log, db, broker),
+		SyncPeriod: 5 * time.Second,
+	}
+	synchronizer.Run(sCtx)
+	defer func() {
+		log.Infow("shutdown", "status", "stopping synchronizer support")
+		defer sCancel()
+	}()
+
+	// =========================================================================
 	// Start Tracing Support
 
 	log.Infow("startup", "status", "initializing OT/Zipkin tracing support")
@@ -283,7 +302,7 @@ func run(log *zap.SugaredLogger) error {
 
 // =============================================================================
 
-// startTracing configure open telemetery to be used with zipkin.
+// startTracing configure open telemetry to be used with zipkin.
 func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
 
 	// WARNING: The current settings are using defaults which may not be

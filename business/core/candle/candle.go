@@ -110,3 +110,29 @@ func (c Core) QueryBySymbolAndInterval(ctx context.Context, pageNumber int, rows
 
 	return toCandleSlice(dbCdl), nil
 }
+
+// Seed creates n candles for symbol and interval.
+func (c Core) Seed(ctx context.Context, nCdl NewCandle, n int) error {
+	if err := validate.Check(nCdl); err != nil {
+		return fmt.Errorf("validating data: %w", err)
+	}
+
+	// Fetch candle from binance api
+	bkrCdls, err := c.bkrAgent.QueryBySymbolAndInterval(ctx, nCdl.Symbol, nCdl.Interval, n)
+	if err != nil {
+		return ErrInvalidCandle
+	}
+
+	// Insert candles into the database
+	for _, bkrCdl := range bkrCdls {
+		dbCdl := *(*db.Candle)(&bkrCdl)
+		dbCdl.ID = validate.GenerateID()
+		dbCdl.SymbolID = nCdl.SymbolID
+
+		if err := c.dbAgent.Create(ctx, dbCdl); err != nil {
+			return fmt.Errorf("create candle in database: %w", err)
+		}
+	}
+
+	return nil
+}
