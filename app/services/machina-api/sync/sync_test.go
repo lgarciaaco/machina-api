@@ -72,7 +72,7 @@ func TestSync(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to query candles for symbol BTCUSDT and interval 1h.", dbtest.Success, testID)
 
 			if len(cdls) != 100 {
-				t.Fatalf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 1h.", dbtest.Failed, testID)
+				t.Fatalf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 1h but got %d", dbtest.Failed, testID, len(cdls))
 			}
 			t.Logf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 1h", dbtest.Success, testID)
 
@@ -83,7 +83,7 @@ func TestSync(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to query candles for symbol BTCUSDT and interval 2h.", dbtest.Success, testID)
 
 			if len(cdls) != 100 {
-				t.Fatalf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 2h.", dbtest.Failed, testID)
+				t.Fatalf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 2h but got %d", dbtest.Failed, testID, len(cdls))
 			}
 			t.Logf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 2h", dbtest.Success, testID)
 
@@ -94,7 +94,7 @@ func TestSync(t *testing.T) {
 			t.Logf("\t%s\tTest %d:\tShould be able to query candles for symbol BTCUSDT and interval 4h.", dbtest.Success, testID)
 
 			if len(cdls) != 100 {
-				t.Fatalf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 4h.", dbtest.Failed, testID)
+				t.Fatalf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 4h but got %d", dbtest.Failed, testID, len(cdls))
 			}
 			t.Logf("\t%s\tTest %d:\tShould get 100 candles for symbol BTCUSDT and interval 4h", dbtest.Success, testID)
 

@@ -14,14 +14,21 @@ import (
 	"go.uber.org/zap"
 )
 
+// Synchronizer exposes functionalities to synchronize a resource. An example is
+// synchronizing candles between binance api and the system
 type Synchronizer interface {
 	Run(ctx context.Context)
 }
 
 var (
-	intervals = []time.Duration{time.Hour, 2 * time.Hour, 4 * time.Hour}
+	intervals       = []time.Duration{time.Hour, 2 * time.Hour, 4 * time.Hour}
+	intervalsString = map[time.Duration]string{
+		5 * time.Minute: "5m", 10 * time.Minute: "10m", 15 * time.Minute: "15m",
+		time.Hour: "1h", 2 * time.Hour: "2h", 4 * time.Hour: "4h",
+	}
 )
 
+// CandleSynchronizer synchronizes candles between binance api and the system
 type CandleSynchronizer struct {
 	Log        *zap.SugaredLogger
 	Symbol     symbol.Core
@@ -29,6 +36,7 @@ type CandleSynchronizer struct {
 	SyncPeriod time.Duration
 }
 
+// Run pulls candles from binance api and inserts them into the system
 func (b *CandleSynchronizer) Run(ctx context.Context) {
 	// Start synchronizing for all symbols
 	go func() {
@@ -69,9 +77,9 @@ func (b CandleSynchronizer) sync(ctx context.Context) error {
 	for _, s := range sbls {
 		for _, i := range intervals {
 			//
-			dbCdl, err := b.Candle.QueryBySymbolAndInterval(ctx, 1, 1, s.ID, fmtDuration(i))
+			dbCdl, err := b.Candle.QueryBySymbolAndInterval(ctx, 1, 1, s.ID, intervalsString[i])
 			if err != nil {
-				b.Log.Errorf("getting candles for symbol %s, interval %s", s.Symbol, fmtDuration(i))
+				b.Log.Errorf("getting candles for symbol %s, interval %s", s.Symbol, intervalsString[i])
 				continue
 			}
 
@@ -81,10 +89,10 @@ func (b CandleSynchronizer) sync(ctx context.Context) error {
 				nCdl := candle.NewCandle{
 					SymbolID: s.ID,
 					Symbol:   s.Symbol,
-					Interval: fmtDuration(i),
+					Interval: intervalsString[i],
 				}
-				if err := b.Candle.Seed(ctx, nCdl, 100); err != nil {
-					b.Log.Errorf("seeding candles for symbol %s, interval %s", s.Symbol, fmtDuration(i))
+				if err := b.Candle.Seed(ctx, nCdl, 101); err != nil {
+					b.Log.Errorf("seeding candles for symbol %s, interval %s", s.Symbol, intervalsString[i])
 				}
 				continue
 			}
@@ -95,21 +103,14 @@ func (b CandleSynchronizer) sync(ctx context.Context) error {
 				_, err := b.Candle.Create(ctx, candle.NewCandle{
 					SymbolID: s.ID,
 					Symbol:   s.Symbol,
-					Interval: fmtDuration(i),
+					Interval: intervalsString[i],
 				})
 				if err != nil {
-					b.Log.Errorf("creating candles for symbol %s, interval %s", s.Symbol, fmtDuration(i))
+					b.Log.Errorf("creating candles for symbol %s, interval %s", s.Symbol, intervalsString[i])
 				}
 			}
 		}
 	}
 
 	return nil
-}
-
-// fmtDuration returns the hour part of a time.Duration
-func fmtDuration(d time.Duration) string {
-	d = d.Round(time.Hour)
-	h := d / time.Hour
-	return fmt.Sprintf("%dh", h)
 }

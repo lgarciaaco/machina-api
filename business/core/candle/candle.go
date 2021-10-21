@@ -40,14 +40,16 @@ func NewCore(log *zap.SugaredLogger, sqlxDB *sqlx.DB, broker broker.Broker) Core
 	}
 }
 
-// Create inserts a new candle into the database.
+// Create inserts a new candle into the database. The new candle is the last closed candle
+// in binance for the given symbol / interval.
 func (c Core) Create(ctx context.Context, nCdl NewCandle) (Candle, error) {
 	if err := validate.Check(nCdl); err != nil {
 		return Candle{}, fmt.Errorf("validating data: %w", err)
 	}
 
-	// Fetch candle from binance api
-	bkrCdls, err := c.bkrAgent.QueryBySymbolAndInterval(ctx, nCdl.Symbol, nCdl.Interval, 1)
+	// Fetch candle from binance api. We fetch 2 candles since the first candle is the
+	// current on going candle which is not closed. It is the second candle we cant to insert
+	bkrCdls, err := c.bkrAgent.QueryBySymbolAndInterval(ctx, nCdl.Symbol, nCdl.Interval, 2)
 	if err != nil {
 		return Candle{}, ErrInvalidCandle
 	}
@@ -123,14 +125,16 @@ func (c Core) Seed(ctx context.Context, nCdl NewCandle, n int) error {
 		return ErrInvalidCandle
 	}
 
-	// Insert candles into the database
-	for _, bkrCdl := range bkrCdls {
-		dbCdl := *(*db.Candle)(&bkrCdl)
-		dbCdl.ID = validate.GenerateID()
-		dbCdl.SymbolID = nCdl.SymbolID
+	// Insert candles into the database, dont insert the very last candle because it is open
+	for i, bkrCdl := range bkrCdls {
+		if i < len(bkrCdls)-1 {
+			dbCdl := *(*db.Candle)(&bkrCdl)
+			dbCdl.ID = validate.GenerateID()
+			dbCdl.SymbolID = nCdl.SymbolID
 
-		if err := c.dbAgent.Create(ctx, dbCdl); err != nil {
-			return fmt.Errorf("create candle in database: %w", err)
+			if err := c.dbAgent.Create(ctx, dbCdl); err != nil {
+				return fmt.Errorf("create candle in database: %w", err)
+			}
 		}
 	}
 
