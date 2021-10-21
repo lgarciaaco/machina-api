@@ -41,8 +41,12 @@ type Binance struct {
 // Request convert a bunch of key-value pairs into an url query, it takes the api endpoint
 // and builds the binance api request. It returns the body of the response
 func (as Binance) Request(ctx context.Context, method, endpoint string, keysAndValues ...string) (rd io.Reader, err error) {
+	if endpoint == "order" {
+		endpoint = endpoint + "/test"
+	}
+
 	// form the api request url
-	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s?", TestNet, endpoint), nil)
+	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s?", APIV3, endpoint), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request %w", err)
 	}
