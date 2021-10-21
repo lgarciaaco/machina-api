@@ -29,6 +29,16 @@ type NewCandle struct {
 
 func toCandle(dbCdl db.Candle) Candle {
 	pc := (*Candle)(&dbCdl)
+	pc.CloseTime = time.Date(
+		pc.CloseTime.Year(), pc.CloseTime.Month(), pc.CloseTime.Day(),
+		pc.CloseTime.Hour(), pc.CloseTime.Minute(), pc.CloseTime.Second(),
+		pc.CloseTime.Nanosecond(), time.Local)
+
+	pc.OpenTime = time.Date(
+		pc.OpenTime.Year(), pc.OpenTime.Month(), pc.OpenTime.Day(),
+		pc.OpenTime.Hour(), pc.OpenTime.Minute(), pc.OpenTime.Second(),
+		pc.OpenTime.Nanosecond(), time.Local)
+
 	return *pc
 }
 

@@ -51,6 +51,7 @@ jobs:
           ./staticcheck/staticcheck -checks=all ./...
       - name: Run tests
         run: |
+          go install golang.org/x/lint/golint
           make test
         timeout-minutes: 15
   build-push:

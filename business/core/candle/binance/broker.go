@@ -25,7 +25,9 @@ func NewAgent(log *zap.SugaredLogger, brk broker.Broker) Agent {
 	}
 }
 
-// QueryBySymbolAndInterval fetch candles from binance api by symbol and interval
+// QueryBySymbolAndInterval fetch candles from binance api by symbol and interval. Candlesticks are uniquely
+// identified by their openTime. When reading candlestick data from the restApi, the latest candle is the is newest
+// and considered “open”. Once the next kline is generated, the previous one is closed and will not be modified.
 func (a Agent) QueryBySymbolAndInterval(cxt context.Context, sbl, ival string, limit int) (or []Candle, err error) {
 	bncResp, err := a.broker.Request(cxt, http.MethodGet, "klines",
 		"symbol", sbl,

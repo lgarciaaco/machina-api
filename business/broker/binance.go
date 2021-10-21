@@ -113,6 +113,6 @@ func (as Binance) Request(ctx context.Context, method, endpoint string, keysAndV
 // a time.Time object
 func ToTime(ut float64) time.Time {
 	t := time.UnixMilli(int64(ut))
-	tf := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
+	tf := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Local)
 	return tf
 }
