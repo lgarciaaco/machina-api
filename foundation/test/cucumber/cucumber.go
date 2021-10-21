@@ -83,12 +83,14 @@ type TestScenario struct {
 	hasTestCaseLock bool
 }
 
+// User sets current user within the test scenario
 func (s *TestScenario) User() *TestUser {
 	s.Suite.Mu.Lock()
 	defer s.Suite.Mu.Unlock()
 	return s.Suite.users[s.CurrentUser]
 }
 
+// Session set the session for the current user within a test scenario
 func (s *TestScenario) Session() *TestSession {
 	result := s.sessions[s.CurrentUser]
 	if result == nil {
@@ -102,6 +104,7 @@ func (s *TestScenario) Session() *TestSession {
 	return result
 }
 
+// JSONMustMatch compares 2 JSONs
 func (s *TestScenario) JSONMustMatch(actual, expected string, expand bool) error {
 
 	var actualParsed interface{}
@@ -232,6 +235,7 @@ func (s *TestSession) RespJSON() (interface{}, error) {
 	return s.respJSON, nil
 }
 
+// SetRespBytes set the response for an http session
 func (s *TestSession) SetRespBytes(bytes []byte) {
 	s.RespBytes = bytes
 	s.respJSON = nil
@@ -241,6 +245,7 @@ func (s *TestSession) SetRespBytes(bytes []byte) {
 // add more to this list if you need test TestSuite specific steps.
 var StepModules []func(ctx *godog.ScenarioContext, s *TestScenario)
 
+// InitializeScenario initializes each scenario for the test suite
 func (s *TestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	ts := &TestScenario{
 		Suite:     s,

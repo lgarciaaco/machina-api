@@ -14,6 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// Synchronizer exposes functionalities to synchronize a resource. An example is
+// synchronizing candles between binance api and the system
 type Synchronizer interface {
 	Run(ctx context.Context)
 }
@@ -22,6 +24,7 @@ var (
 	intervals = []time.Duration{time.Hour, 2 * time.Hour, 4 * time.Hour}
 )
 
+// CandleSynchronizer synchronizes candles between binance api and the system
 type CandleSynchronizer struct {
 	Log        *zap.SugaredLogger
 	Symbol     symbol.Core
@@ -29,6 +32,7 @@ type CandleSynchronizer struct {
 	SyncPeriod time.Duration
 }
 
+// Run pulls candles from binance api and inserts them into the system
 func (b *CandleSynchronizer) Run(ctx context.Context) {
 	// Start synchronizing for all symbols
 	go func() {

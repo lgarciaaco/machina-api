@@ -11,7 +11,7 @@ import (
 
 type contextKey string
 
-var ContextAccessToken = contextKey("accesstoken")
+var contextAccessToken = contextKey("accesstoken")
 
 func init() {
 	StepModules = append(StepModules, func(ctx *godog.ScenarioContext, s *TestScenario) {
@@ -52,7 +52,7 @@ func (s *TestSuite) verifyUserAndPassword(usrID string, password string) error {
 	s.users[usrID] = &TestUser{
 		Name:  usrID,
 		Token: token,
-		Ctx:   context.WithValue(context.Background(), ContextAccessToken, token),
+		Ctx:   context.WithValue(context.Background(), contextAccessToken, token),
 	}
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 func init() {
 	StepModules = append(StepModules, func(ctx *godog.ScenarioContext, s *TestScenario) {
 		ctx.Step(`^the response code should be (\d+)$`, s.theResponseCodeShouldBe)
-		ctx.Step(`^the response should match json:$`, s.TheResponseShouldMatchJSONDoc)
+		ctx.Step(`^the response should match json:$`, s.theResponseShouldMatchJSONDoc)
 		ctx.Step(`^the response should match:$`, s.theResponseShouldMatchText)
 		ctx.Step(`^the response should match "([^"]*)"$`, s.theResponseShouldMatchText)
 		ctx.Step(`^I store the "([^"]*)" selection from the response as \${([^"]*)}$`, s.iStoreTheSelectionFromTheResponseAs)
@@ -31,7 +31,7 @@ func (s *TestScenario) theResponseCodeShouldBe(expected int) error {
 	}
 	return nil
 }
-func (s *TestScenario) TheResponseShouldMatchJSONDoc(expected *godog.DocString) error {
+func (s *TestScenario) theResponseShouldMatchJSONDoc(expected *godog.DocString) error {
 	return s.theResponseShouldMatchJSON(expected.Content)
 }
 

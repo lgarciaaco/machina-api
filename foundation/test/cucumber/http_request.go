@@ -17,7 +17,7 @@ func init() {
 		ctx.Step(`^the path prefix is "([^"]*)"$`, s.theAPIPrefixIs)
 		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)"$`, s.sendHTTPRequest)
 		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" as a json event stream$`, s.sendHTTPRequestAsEventStream)
-		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" with json body:$`, s.SendHTTPRequestWithJSONBody)
+		ctx.Step(`^I (GET|POST|PUT|DELETE|PATCH|OPTION) path "([^"]*)" with json body:$`, s.sendHTTPRequestWithJSONBody)
 		ctx.Step(`^I wait up to "([^"]*)" seconds for a GET on path "([^"]*)" response "([^"]*)" selection to match "([^"]*)"$`, s.iWaitUpToSecondsForAGETOnPathResponseSelectionToMatch)
 		ctx.Step(`^I wait up to "([^"]*)" seconds for a GET on path "([^"]*)" response code to match "([^"]*)"$`, s.iWaitUpToSecondsForAGETOnPathResponseCodeToMatch)
 		ctx.Step(`^I wait up to "([^"]*)" seconds for a response event$`, s.iWaitUpToSecondsForAResponseJSONEvent)
@@ -30,18 +30,18 @@ func (s *TestScenario) theAPIPrefixIs(prefix string) error {
 }
 
 func (s *TestScenario) sendHTTPRequest(method, path string) error {
-	return s.SendHTTPRequestWithJSONBody(method, path, nil)
+	return s.sendHTTPRequestWithJSONBody(method, path, nil)
 }
 
 func (s *TestScenario) sendHTTPRequestAsEventStream(method, path string) error {
-	return s.SendHTTPRequestWithJSONBodyAndStyle(method, path, nil, true, true)
+	return s.sendHTTPRequestWithJSONBodyAndStyle(method, path, nil, true, true)
 }
 
-func (s *TestScenario) SendHTTPRequestWithJSONBody(method, path string, jsonTxt *godog.DocString) (err error) {
-	return s.SendHTTPRequestWithJSONBodyAndStyle(method, path, jsonTxt, false, true)
+func (s *TestScenario) sendHTTPRequestWithJSONBody(method, path string, jsonTxt *godog.DocString) (err error) {
+	return s.sendHTTPRequestWithJSONBodyAndStyle(method, path, jsonTxt, false, true)
 }
 
-func (s *TestScenario) SendHTTPRequestWithJSONBodyAndStyle(method, path string, jsonTxt *godog.DocString, eventStream bool, expandJSON bool) (err error) {
+func (s *TestScenario) sendHTTPRequestWithJSONBodyAndStyle(method, path string, jsonTxt *godog.DocString, eventStream bool, expandJSON bool) (err error) {
 	// handle panic
 	defer func() {
 		switch t := recover().(type) {
