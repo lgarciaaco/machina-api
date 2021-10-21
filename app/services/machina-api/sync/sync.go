@@ -21,7 +21,7 @@ type Synchronizer interface {
 }
 
 var (
-	intervals       = []time.Duration{5 * time.Minute, time.Hour, 2 * time.Hour, 4 * time.Hour}
+	intervals       = []time.Duration{time.Hour, 2 * time.Hour, 4 * time.Hour}
 	intervalsString = map[time.Duration]string{
 		5 * time.Minute: "5m", 10 * time.Minute: "10m", 15 * time.Minute: "15m",
 		time.Hour: "1h", 2 * time.Hour: "2h", 4 * time.Hour: "4h",
@@ -91,7 +91,7 @@ func (b CandleSynchronizer) sync(ctx context.Context) error {
 					Symbol:   s.Symbol,
 					Interval: intervalsString[i],
 				}
-				if err := b.Candle.Seed(ctx, nCdl, 100); err != nil {
+				if err := b.Candle.Seed(ctx, nCdl, 101); err != nil {
 					b.Log.Errorf("seeding candles for symbol %s, interval %s", s.Symbol, intervalsString[i])
 				}
 				continue

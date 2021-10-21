@@ -194,7 +194,6 @@ seed: migrate
 # Running tests within the local computer
 
 test:
-	golint ./app/... ./business/... ./foundation/...
 	go vet ./...
 	go test ./... -count=1
 
