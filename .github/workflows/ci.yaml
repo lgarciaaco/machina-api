@@ -53,8 +53,8 @@ jobs:
         run: |
           make test
         timeout-minutes: 15
-  build-push:
-    name: "Build and Push"
+  build-push-amd:
+    name: "Build AMD64 and Push"
     runs-on: ubuntu-latest
     needs: lint-test
     if: github.event_name == 'push'
@@ -79,4 +79,31 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Build and publish docker image
         run: |
-          make all
+          make build-api build-metrics  push-api push-metrics
+  build-push-arm:
+    name: "Build ARM64 and Push"
+    runs-on: arm64
+    needs: lint-test
+    #if: github.event_name == 'push'
+    steps:
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17"
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: Cache go module
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Build and publish docker image
+        run: |
+          make build-api-arm build-metrics-arm push-api-arm push-metrics-arm

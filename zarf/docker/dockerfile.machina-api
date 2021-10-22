@@ -27,14 +27,21 @@ RUN go build -ldflags "-X main.build=${BUILD_REF}"
 FROM alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
+
+RUN apk update && \
+    apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime && \
+    echo "Europe/Berlin" >  /etc/timezone
+
 COPY --from=build_machina-api /service/zarf/keys/. /service/zarf/keys/.
 COPY --from=build_machina-api /service/app/tooling/machina-admin/machina-admin /service/machina-admin
 COPY --from=build_machina-api /service/app/services/machina-api/machina-api /service/machina-api
+
 WORKDIR /service
 CMD ["./machina-api"]
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.title="machina-api" \
       org.opencontainers.image.authors="Luis Garcia Acosta <lgarciaac@gmail.com>" \
-      org.opencontainers.image.source="https://github.com/lgarciaaco/machina-api/app/machina-api" \
-      org.opencontainers.image.revision="${BUILD_REF}" \
+      org.opencontainers.image.source="https://github.com/lgarciaaco/machina-api/app/services/machina-api" \
+      org.opencontainers.image.revision="${BUILD_REF}"

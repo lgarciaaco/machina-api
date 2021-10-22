@@ -193,7 +193,7 @@ func run(log *zap.SugaredLogger) error {
 		Log:        log,
 		Symbol:     symbol.NewCore(log, db, broker),
 		Candle:     candle.NewCore(log, db, broker),
-		SyncPeriod: 5 * time.Minute,
+		SyncPeriod: 1 * time.Minute,
 	}
 	synchronizer.Run(sCtx)
 	defer func() {
