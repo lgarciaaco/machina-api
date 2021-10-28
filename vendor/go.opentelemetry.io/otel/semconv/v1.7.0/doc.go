@@ -1,4 +1,4 @@
-// Copyright 2021 The OpenZipkin Authors
+// Copyright The OpenTelemetry Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
-
-// Kind clarifies context of timestamp, duration and remoteEndpoint in a span.
-type Kind string
-
-// Available Kind values
-const (
-	Undetermined Kind = ""
-	Client       Kind = "CLIENT"
-	Server       Kind = "SERVER"
-	Producer     Kind = "PRODUCER"
-	Consumer     Kind = "CONSUMER"
-)
+// Package semconv implements OpenTelemetry semantic conventions.
+//
+// OpenTelemetry semantic conventions are agreed standardized naming
+// patterns for OpenTelemetry things. This package represents the conventions
+// as of the v1.7.0 version of the OpenTelemetry specification.
+package semconv // import "go.opentelemetry.io/otel/semconv/v1.7.0"
