@@ -35,9 +35,9 @@ PROJECT := "lgarciaac"
 
 all: build push
 
-build: build-api build-api-arm build-metrics build-metrics-arm
+build: build-api build-api-arm build-metrics build-metrics-arm build-strategy build-strategy-arm
 
-push: push-api push-api-arm push-metrics push-metrics-arm
+push: push-api push-api-arm push-metrics push-metrics-arm push-strategy push-strategy-arm
 
 build-api:
 	docker build \
