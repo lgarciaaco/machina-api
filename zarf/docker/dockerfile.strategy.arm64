@@ -1,0 +1,34 @@
+# Build the Go Binary.
+FROM golang:1.17 as build_machina-api
+ENV CGO_ENABLED 0
+ARG BUILD_REF
+
+# Create the service directory and the copy the module files first and then
+# download the dependencies. If this doesn't change, we won't need to do this
+# again in future builds.
+# RUN mkdir /service
+# COPY go.* /service/
+# WORKDIR /service
+# RUN go mod download
+
+# Copy the source code into the container.
+COPY . /service
+
+# Build the service binary.
+WORKDIR /service/app/strategies/moving-average
+RUN GOOS=linux GOARCH=arm64 go build -ldflags "-X main.build=${BUILD_REF}"
+
+
+# Run the Go Binary in Alpine.
+FROM arm64v8/alpine:3.14
+ARG BUILD_DATE
+ARG BUILD_REF
+COPY --from=build_machina-api /service/app/strategies/moving-average/moving-average /service/machina-strategy
+WORKDIR /service
+CMD ["./machina-strategy"]
+
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="machina-api" \
+      org.opencontainers.image.authors="Luis Garcia Acosta <lgarciaac@gmail.com>" \
+      org.opencontainers.image.source="https://github.com/lgarciaaco/machina-api/app/machina-strategy" \
+      org.opencontainers.image.revision="${BUILD_REF}"

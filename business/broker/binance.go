@@ -21,7 +21,10 @@ var (
 )
 
 const (
-	OrderTypeMarket    = "MARKET"
+	OrderTypeMarket = "MARKET"
+	OrderSideSell   = "SELL"
+	OrderSideBuy    = "BUY"
+
 	MaxIdleConnections = 10
 	IdleConnTimeout    = 30 * time.Second
 	TestNet            = "https://testnet.binance.vision/api/v3"
@@ -46,7 +49,7 @@ func (as Binance) Request(ctx context.Context, method, endpoint string, keysAndV
 	}
 
 	// form the api request url
-	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s?", APIV3, endpoint), nil)
+	req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("%s/%s", APIV3, endpoint), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request %w", err)
 	}
@@ -64,7 +67,7 @@ func (as Binance) Request(ctx context.Context, method, endpoint string, keysAndV
 		i += 2
 	}
 
-	if endpoint == "order" {
+	if endpoint == "order/test" {
 		// If there is an Api key defined we include it in the header
 		if as.APIKey != "" {
 			req.Header.Add("X-MBX-APIKEY", as.APIKey)
@@ -99,6 +102,7 @@ func (as Binance) Request(ctx context.Context, method, endpoint string, keysAndV
 		return nil, fmt.Errorf("status code [%d] out of range, expecting 200 <= status code <= 299", resp.StatusCode)
 	}
 
+	// finally, return the reader for the body
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("creating reader %w", err)

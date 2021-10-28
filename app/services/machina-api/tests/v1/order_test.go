@@ -236,7 +236,7 @@ func (ot *OrderTests) postOrder404(t *testing.T) {
 func (ot *OrderTests) postOrder201(t *testing.T) order.Order {
 	nOdr := order.NewOrder{
 		PositionID: "75fabb5c-6c22-40c6-9236-0f8017a8e12d",
-		Quantity:   2,
+		Quantity:   0.1,
 		Side:       "SELL",
 	}
 
@@ -273,10 +273,9 @@ func (ot *OrderTests) postOrder201(t *testing.T) order.Order {
 			exp := got
 			exp.Status = "FILLED"
 			exp.Side = "SELL"
-			exp.SymbolID = "5f25aa33-e294-4353-92b4-246e3bacdfc7"
+			exp.SymbolID = "97514fb4-4ff5-4561-91d1-c8da711d8f32"
 			exp.Type = "MARKET"
-			exp.Quantity = 2
-			exp.Price = 3997.8
+			exp.Quantity = 0.1
 
 			if diff := cmp.Diff(got, exp); diff != "" {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)

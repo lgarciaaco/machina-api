@@ -39,7 +39,7 @@ func TestSymbol(t *testing.T) {
 		t.Logf("\tTest %d:\tWhen handling a single SymbolID.", testID)
 		{
 			ctx := context.Background()
-			symbol := "BNBUSDT"
+			symbol := "BNBBTC"
 			sbl, err := core.Create(ctx, NewSymbol{Symbol: symbol})
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to create symbol : %s.", dbtest.Failed, testID, err)

@@ -1,7 +1,0 @@
-resources:
-  - ./secret.yaml
-  - ./deployment.yaml
-commonLabels:
-  app.kubernetes.io/component: strategy
-  app.kubernetes.io/name: moving-average-crossover
-  app.kubernetes.io/version: "1.0"

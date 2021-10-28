@@ -145,7 +145,7 @@ func (ot *SymbolTests) postSymbol401(t *testing.T) {
 // postSymbol201 validates a symbol can be created with the endpoint.
 func (ot *SymbolTests) postSymbol201(t *testing.T) symbol.Symbol {
 	nSbl := symbol.NewSymbol{
-		Symbol: "BNBUSDT",
+		Symbol: "BNBBTC",
 	}
 
 	body, err := json.Marshal(&nSbl)
@@ -179,7 +179,7 @@ func (ot *SymbolTests) postSymbol201(t *testing.T) symbol.Symbol {
 			// Define what we wanted to receive. We will just trust the generated
 			// fields like ID and Dates so we copy u.
 			exp := got
-			exp.Symbol = "BNBUSDT"
+			exp.Symbol = "BNBBTC"
 			exp.QuotePrecision = 8
 			exp.BaseCommissionPrecision = 8
 			exp.OcoAllowed = true

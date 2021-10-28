@@ -5,5 +5,5 @@ resources:
   - ./ingress.yaml
 commonLabels:
   app.kubernetes.io/component: backend
-  app.kubernetes.io/name: trader
+  app.kubernetes.io/name: machina-api
   app.kubernetes.io/version: "1.0"

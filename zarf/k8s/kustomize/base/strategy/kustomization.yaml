@@ -1,0 +1,6 @@
+resources:
+  - ./deployment.yaml
+commonLabels:
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/name: strategy
+  app.kubernetes.io/version: "1.0"
