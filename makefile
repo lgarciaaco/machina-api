@@ -55,6 +55,22 @@ build-api-arm:
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		.
 
+build-strategy:
+	docker build \
+		-f zarf/docker/dockerfile.strategy \
+		-t $(PROJECT)/machina-strategy:$(VERSION) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		.
+
+build-strategy-arm:
+	docker build \
+		-f zarf/docker/dockerfile.strategy.arm64 \
+		-t $(PROJECT)/machina-strategy:$(VERSION)-arm64 \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		.
+
 build-metrics:
 	docker build \
 		-f zarf/docker/dockerfile.metrics \
@@ -76,6 +92,12 @@ push-api:
 
 push-api-arm:
 	docker push $(PROJECT)/machina-api:$(VERSION)-arm64
+
+push-strategy:
+	docker push $(PROJECT)/machina-strategy:$(VERSION)
+
+push-strategy-arm:
+	docker push $(PROJECT)/machina-strategy:$(VERSION)-arm64
 
 push-metrics:
 	docker push $(PROJECT)/machina-metrics:$(VERSION)

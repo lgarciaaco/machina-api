@@ -87,7 +87,7 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Po
 	GROUP BY
 		p.position_id, u.name, s.symbol
 	ORDER BY
-		creation_time
+		creation_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var poss []Position
@@ -129,7 +129,7 @@ func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int,
 	GROUP BY
 		p.position_id, u.name, s.symbol
 	ORDER BY
-		p.creation_time
+		p.creation_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var poss []Position

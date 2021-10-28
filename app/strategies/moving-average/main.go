@@ -12,19 +12,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/lgarciaaco/machina-api/app/services/machina-api/sync"
-	"github.com/lgarciaaco/machina-api/business/core/candle"
-	"github.com/lgarciaaco/machina-api/business/core/symbol"
+	"github.com/lgarciaaco/machina-api/app/strategies/moving-average/handlers"
 
-	"github.com/lgarciaaco/machina-api/business/broker/encode"
+	"github.com/lgarciaaco/machina-api/business/strategies"
+	v1 "github.com/lgarciaaco/machina-api/business/strategies/api/v1"
 
-	"github.com/lgarciaaco/machina-api/business/broker"
+	"github.com/lgarciaaco/machina-api/business/strategies/financial"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ardanlabs/conf/v2"
-	"github.com/lgarciaaco/machina-api/app/services/machina-api/handlers"
-	"github.com/lgarciaaco/machina-api/business/sys/auth"
-	"github.com/lgarciaaco/machina-api/business/sys/database"
-	"github.com/lgarciaaco/machina-api/foundation/keystore"
 	"github.com/lgarciaaco/machina-api/foundation/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -46,7 +43,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("MACHINA_API")
+	log, err := logger.New("MACHINA_STRATEGY")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -78,30 +75,23 @@ func run(log *zap.SugaredLogger) error {
 
 	cfg := struct {
 		conf.Version
+		Strategy struct {
+			TradingPair   string  `conf:"default:97514fb4-4ff5-4561-91d1-c8da711d8f32,trading par for this strategy"`
+			Interval      string  `conf:"default:1h,candle range"`
+			Base          float64 `conf:"default:0.2,base coin this strategy will trade on"`
+			Alt           float64 `conf:"default:500,alt coin this strategy will trade on"`
+			Lot           float64 `conf:"default:0.1,lot to open orders per position"`
+			WindowFast    int     `conf:"default:20,fast moving average"`
+			WindowSlow    int     `conf:"default:100,slow moving average"`
+			WindowWarming int     `conf:"default:100,how many candles are required to start trading"`
+		}
 		Web struct {
-			ReadTimeout     time.Duration `conf:"default:5s"`
-			WriteTimeout    time.Duration `conf:"default:10s"`
-			IdleTimeout     time.Duration `conf:"default:120s"`
-			ShutdownTimeout time.Duration `conf:"default:20s"`
-			APIHost         string        `conf:"default:0.0.0.0:3000"`
-			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			DebugHost string `conf:"default:0.0.0.0:4000"`
 		}
-		Auth struct {
-			KeysFolder string `conf:"default:zarf/keys/"`
-			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
-		}
-		DB struct {
-			User         string `conf:"default:postgres"`
-			Password     string `conf:"default:postgres,mask"`
-			Host         string `conf:"default:localhost"`
-			Name         string `conf:"default:postgres"`
-			MaxIdleConns int    `conf:"default:0"`
-			MaxOpenConns int    `conf:"default:0"`
-			DisableTLS   bool   `conf:"default:true"`
-		}
-		Broker struct {
-			BinanceKey    string `conf:"mask,required"`
-			BinanceSecret string `conf:"mask,required"`
+		API struct {
+			Username string `conf:"noprint,required"`
+			Password string `conf:"noprint,required"`
+			Endpoint string `conf:"default:http://localhost:3000"`
 		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://localhost:9411/api/v2/spans"`
@@ -115,7 +105,7 @@ func run(log *zap.SugaredLogger) error {
 		},
 	}
 
-	const prefix = "MACHINA"
+	const prefix = "STRATEGY_MA"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
@@ -140,68 +130,6 @@ func run(log *zap.SugaredLogger) error {
 	expvar.NewString("build").Set(build)
 
 	// =========================================================================
-	// Initialize authentication support
-
-	log.Infow("startup", "status", "initializing authentication support")
-
-	// Construct a key store based on the key files stored in
-	// the specified directory.
-	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
-	if err != nil {
-		return fmt.Errorf("reading keys: %w", err)
-	}
-
-	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
-	if err != nil {
-		return fmt.Errorf("constructing auth: %w", err)
-	}
-
-	// =========================================================================
-	// Binance broker support
-	broker := broker.TestBinance{
-		APIKey: cfg.Broker.BinanceKey,
-		Signer: &encode.Hmac{Key: []byte(cfg.Broker.BinanceSecret)},
-	}
-
-	// =========================================================================
-	// Database Support
-
-	// Create connectivity to the database.
-	log.Infow("startup", "status", "initializing database support", "host", cfg.DB.Host)
-
-	db, err := database.Open(database.Config{
-		User:         cfg.DB.User,
-		Password:     cfg.DB.Password,
-		Host:         cfg.DB.Host,
-		Name:         cfg.DB.Name,
-		MaxIdleConns: cfg.DB.MaxIdleConns,
-		MaxOpenConns: cfg.DB.MaxOpenConns,
-		DisableTLS:   cfg.DB.DisableTLS,
-	})
-	if err != nil {
-		return fmt.Errorf("connecting to db: %w", err)
-	}
-	defer func() {
-		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
-		db.Close()
-	}()
-
-	// =========================================================================
-	// Sync support
-	sCtx, sCancel := context.WithCancel(context.Background())
-	synchronizer := sync.CandleSynchronizer{
-		Log:        log,
-		Symbol:     symbol.NewCore(log, db, broker),
-		Candle:     candle.NewCore(log, db, broker),
-		SyncPeriod: 5 * time.Minute,
-	}
-	synchronizer.Run(sCtx)
-	defer func() {
-		log.Infow("shutdown", "status", "stopping synchronizer support")
-		defer sCancel()
-	}()
-
-	// =========================================================================
 	// Start Tracing Support
 
 	log.Infow("startup", "status", "initializing OT/Zipkin tracing support")
@@ -216,6 +144,11 @@ func run(log *zap.SugaredLogger) error {
 	}
 	defer traceProvider.Shutdown(context.Background())
 
+	// Make a channel to listen for an interrupt or terminate signal from the OS.
+	// Use a buffered channel because the signal package requires it.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
 	// =========================================================================
 	// Start Debug Service
 
@@ -225,7 +158,7 @@ func run(log *zap.SugaredLogger) error {
 	// related endpoints. This include the standard library endpoints.
 
 	// Construct the mux for the debug calls.
-	debugMux := handlers.DebugMux(build, log, db)
+	debugMux := handlers.DebugMux(build, log)
 
 	// Start the service listening for debug requests.
 	// Not concerned with shutting this down with load shedding.
@@ -236,44 +169,67 @@ func run(log *zap.SugaredLogger) error {
 	}()
 
 	// =========================================================================
-	// Start API Service
+	// Start running the strategy
 
-	log.Infow("startup", "status", "initializing V1 API support")
-
-	// Make a channel to listen for an interrupt or terminate signal from the OS.
-	// Use a buffered channel because the signal package requires it.
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
-
-	// Construct the mux for the API calls.
-	apiMux := handlers.APIMux(handlers.APIMuxConfig{
-		Shutdown: shutdown,
-		Log:      log,
-		Auth:     auth,
-		DB:       db,
-		Broker:   broker,
-	}, handlers.WithCORS("*"))
-
-	// Construct a server to service the requests against the mux.
-	api := http.Server{
-		Addr:         cfg.Web.APIHost,
-		Handler:      apiMux,
-		ReadTimeout:  cfg.Web.ReadTimeout,
-		WriteTimeout: cfg.Web.WriteTimeout,
-		IdleTimeout:  cfg.Web.IdleTimeout,
-		ErrorLog:     zap.NewStdLog(log.Desugar()),
+	// Client required for trader and puller
+	client := &v1.Client{
+		Client:    retryablehttp.NewClient(),
+		Username:  cfg.API.Username,
+		Password:  cfg.API.Password,
+		TraderAPI: cfg.API.Endpoint,
 	}
+	err = client.Authenticate()
+	if err != nil {
+		return fmt.Errorf("authenticating agains trader api %v", err)
+	}
+
+	// Puller
+	puller := strategies.FromAPI{
+		Log:          log,
+		PullInterval: 10 * time.Second,
+		TradingPair: strategies.TradingPair{
+			Interval: cfg.Strategy.Interval,
+			Symbol:   cfg.Strategy.TradingPair,
+			Fast:     cfg.Strategy.WindowFast,
+			Slow:     cfg.Strategy.WindowSlow,
+			Warming:  cfg.Strategy.WindowWarming,
+		},
+		Client: client,
+	}
+
+	// Trader
+	trader := &strategies.ToAPI{
+		Log: log,
+		Budget: &financial.FixBudget{
+			BaseBudget: financial.BaseBudget{
+				Base: cfg.Strategy.Base,
+				Alt:  cfg.Strategy.Alt,
+				Lot:  cfg.Strategy.Lot,
+			},
+		},
+		Client: client,
+	}
+
+	// Print total profit to date
+	defer log.Infof("main : total profit to date: %f", trader.Profit())
 
 	// Make a channel to listen for errors coming from the listener. Use a
 	// buffered channel so the goroutine can exit if we don't collect this error.
 	serverErrors := make(chan error, 1)
 
-	// Start the service listening for api requests.
-	go func() {
-		log.Infow("startup", "status", "api router started", "host", api.Addr)
-		serverErrors <- api.ListenAndServe()
-	}()
+	// Make a channel to shutdown the strategy
+	done := make(chan bool)
 
+	// Run the strategy
+	go func() {
+		s := financial.Strategy{
+			Log: log,
+			Rule: financial.NewMovingAverageRule(
+				cfg.Strategy.WindowFast, cfg.Strategy.WindowSlow, cfg.Strategy.WindowWarming, &financial.TimeSeries{}),
+		}
+
+		serverErrors <- s.Run(done, puller, trader)
+	}()
 	// =========================================================================
 	// Shutdown
 
@@ -285,16 +241,11 @@ func run(log *zap.SugaredLogger) error {
 	case sig := <-shutdown:
 		log.Infow("shutdown", "status", "shutdown started", "signal", sig)
 		defer log.Infow("shutdown", "status", "shutdown complete", "signal", sig)
+		close(done)
 
 		// Give outstanding requests a deadline for completion.
-		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
-		defer cancel()
-
-		// Asking listener to shutdown and shed load.
-		if err := api.Shutdown(ctx); err != nil {
-			api.Close()
-			return fmt.Errorf("could not stop server gracefully: %w", err)
-		}
+		// ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
+		// defer cancel()
 	}
 
 	return nil

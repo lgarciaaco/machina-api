@@ -4,3 +4,4 @@ resources:
   - ./database
   - ./api
   - ./zipkin
+  - ./strategy

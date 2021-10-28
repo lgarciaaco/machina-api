@@ -1,9 +1,6 @@
 resources:
-  - ./secret.yaml
   - ./deployment.yaml
-  - ./service.yaml
-  - ./ingress.yaml
 commonLabels:
   app.kubernetes.io/component: backend
-  app.kubernetes.io/name: machina-api
+  app.kubernetes.io/name: strategy
   app.kubernetes.io/version: "1.0"
