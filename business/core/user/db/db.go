@@ -117,7 +117,7 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Us
 	FROM
 		users
 	ORDER BY
-		user_id
+		date_created
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var usrs []User

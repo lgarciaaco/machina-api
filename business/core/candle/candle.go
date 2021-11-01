@@ -133,7 +133,7 @@ func (c Core) Seed(ctx context.Context, nCdl NewCandle, n int) error {
 			dbCdl.SymbolID = nCdl.SymbolID
 
 			if err := c.dbAgent.Create(ctx, dbCdl); err != nil {
-				return fmt.Errorf("create candle in database: %w", err)
+				return fmt.Errorf("create candle [%v] in database. [%w]", dbCdl, err)
 			}
 		}
 	}

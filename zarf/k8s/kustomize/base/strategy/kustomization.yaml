@@ -1,5 +1,6 @@
 resources:
-  - ./deployment.yaml
+  - ./deployment-bnbusdt-1h.yaml
+  - ./deployment-bnbusdt-4h.yaml
 commonLabels:
   app.kubernetes.io/component: backend
   app.kubernetes.io/name: strategy

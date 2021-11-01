@@ -85,12 +85,12 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: trader-api
-                key: TRADER_API_KEY
+                key: MACHINA_BROKER_BINANCE_KEY
           - name: MACHINA_BROKER_BINANCE_SECRET
             valueFrom:
               secretKeyRef:
                 name: trader-api
-                key: TRADER_API_SECRET_KEY
+                key: MACHINA_BROKER_BINANCE_SECRET
         ports:
           - name: machina-api
             containerPort: 3000

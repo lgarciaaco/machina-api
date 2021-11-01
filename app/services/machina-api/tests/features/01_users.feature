@@ -85,19 +85,19 @@ Feature: Users api
       {
          "date_created": "2019-03-24T00:00:00Z",
          "date_updated": "2019-03-24T00:00:00Z",
-         "id": "45b5fbd3-755f-4379-8f07-a58d4a30fa2f",
-         "name": "User Gopher",
-         "roles": [
-            "USER"
-         ]
-      },
-      {
-         "date_created": "2019-03-24T00:00:00Z",
-         "date_updated": "2019-03-24T00:00:00Z",
          "id": "5cf37266-3473-4006-984f-9325122678b7",
          "name": "Admin Gopher",
          "roles": [
             "ADMIN",
+            "USER"
+         ]
+      },
+       {
+         "date_created": "2019-03-24T00:00:00Z",
+         "date_updated": "2019-03-24T00:00:00Z",
+         "id": "45b5fbd3-755f-4379-8f07-a58d4a30fa2f",
+         "name": "User Gopher",
+         "roles": [
             "USER"
          ]
       }

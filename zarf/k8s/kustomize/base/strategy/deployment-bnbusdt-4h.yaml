@@ -2,17 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: machina-strategy
+  name: bnbusdt-4h
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: machina-strategy
+      name: bnbusdt-4h
   template:
     metadata:
-      name: machina-strategy
+      name: bnbusdt-4h
       labels:
         app: machina-strategy
+        name: bnbusdt-4h
     spec:
       containers:
       - name: metrics
@@ -37,7 +39,7 @@ spec:
           - name: STRATEGY_MA_API_STRATEGY_TRADING_PAIR
             value: "97514fb4-4ff5-4561-91d1-c8da711d8f32"
           - name: STRATEGY_MA_API_STRATEGY_TRADING_PAIR
-            value: "1h"
+            value: "4h"
         ports:
           - name: api-debug
             containerPort: 4000

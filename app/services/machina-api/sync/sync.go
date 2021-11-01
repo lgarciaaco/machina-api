@@ -92,7 +92,7 @@ func (b CandleSynchronizer) sync(ctx context.Context) error {
 					Interval: intervalsString[i],
 				}
 				if err := b.Candle.Seed(ctx, nCdl, 101); err != nil {
-					b.Log.Errorf("seeding candles for symbol %s, interval %s", s.Symbol, intervalsString[i])
+					b.Log.Errorf("seeding candles for symbol %s, interval %s, %w", s.Symbol, intervalsString[i], err)
 				}
 				continue
 			}
