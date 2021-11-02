@@ -49,9 +49,9 @@ func (s Store) Tran(tx sqlx.ExtContext) Store {
 func (s Store) Create(ctx context.Context, usr User) error {
 	const q = `
 	INSERT INTO users
-		(user_id, name, password_hash, roles, date_created, date_updated)
+		(user_id, name, description, password_hash, roles, date_created, date_updated)
 	VALUES
-		(:user_id, :name, :password_hash, :roles, :date_created, :date_updated)`
+		(:user_id, :name, :description, :password_hash, :roles, :date_created, :date_updated)`
 
 	if err := database.NamedExecContext(ctx, s.log, s.db, q, usr); err != nil {
 		return fmt.Errorf("inserting user: %w", err)
@@ -68,6 +68,7 @@ func (s Store) Update(ctx context.Context, usr User) error {
 	SET 
 		"name" = :name,
 		"roles" = :roles,
+		"description" = :description,
 		"password_hash" = :password_hash,
 		"date_updated" = :date_updated
 	WHERE
@@ -113,11 +114,16 @@ func (s Store) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Us
 
 	const q = `
 	SELECT
-		*
+		u.*,
+		COUNT(p.position_id) AS positions_total
 	FROM
-		users
+		users AS u
+	LEFT JOIN
+		positions AS p ON p.user_id = u.user_id
+	GROUP BY
+		u.user_id
 	ORDER BY
-		date_created
+		u.date_created DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var usrs []User
@@ -138,11 +144,16 @@ func (s Store) QueryByID(ctx context.Context, userID string) (User, error) {
 
 	const q = `
 	SELECT
-		*
+		u.*,
+		COUNT(p.position_id) AS positions_total
 	FROM
-		users
+		users AS u
+	LEFT JOIN
+		positions AS p ON p.user_id = u.user_id
 	WHERE 
-		user_id = :user_id`
+		u.user_id = :user_id
+	GROUP BY
+		u.user_id`
 
 	var usr User
 	if err := database.NamedQueryStruct(ctx, s.log, s.db, q, data, &usr); err != nil {

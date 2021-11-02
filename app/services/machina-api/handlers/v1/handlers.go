@@ -48,11 +48,11 @@ func Routes(app *web.App, cfg Config) {
 		Auth: cfg.Auth,
 	}
 	app.Handle(http.MethodGet, version, "/users/token", ugh.Token, mid.Cors("*"))
-	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, admin)
-	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, authen)
-	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, admin)
-	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, admin)
-	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, admin)
+	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, authen, admin, mid.Cors("*"))
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, authen, mid.Cors("*"))
+	app.Handle(http.MethodPost, version, "/users", ugh.Create, authen, admin, mid.Cors("*"))
+	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, authen, admin, mid.Cors("*"))
+	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, authen, admin, mid.Cors("*"))
 
 	// Register symbol endpoints
 	sbl := symbolgrp.Handlers{

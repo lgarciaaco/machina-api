@@ -143,6 +143,7 @@ func (ut *UserTests) postUser400(t *testing.T) {
 
 			fields := validate.FieldErrors{
 				{Field: "name", Error: "name is a required field"},
+				{Field: "description", Error: "description is a required field"},
 				{Field: "roles", Error: "roles is a required field"},
 				{Field: "password", Error: "password is a required field"},
 			}
@@ -407,6 +408,7 @@ func (ut *UserTests) crudUser(t *testing.T) {
 func (ut *UserTests) postUser201(t *testing.T) user.User {
 	nu := user.NewUser{
 		Name:            "Bill Kennedy",
+		Description:     "Desc",
 		Roles:           []string{auth.RoleAdmin},
 		Password:        "gophers",
 		PasswordConfirm: "gophers",

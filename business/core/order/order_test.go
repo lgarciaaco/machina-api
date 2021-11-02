@@ -66,11 +66,11 @@ func TestOrder(t *testing.T) {
 
 			now := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 			nOdr := NewOrder{
-				SymbolID:   "125240c0-7f7f-4d0f-b30d-939fd93cf027",
-				Symbol:     "ETHUSDT",
+				SymbolID:   "97514fb4-4ff5-4561-91d1-c8da711d8f32",
+				Symbol:     "BNBUSDT",
 				PositionID: "75fabb5c-6c22-40c6-9236-0f8017a8e12d",
-				Quantity:   0.01,
-				Side:       "BUY",
+				Quantity:   0.1,
+				Side:       "SELL",
 			}
 			odr, err := core.Create(ctx, nOdr, now)
 			if err != nil {
