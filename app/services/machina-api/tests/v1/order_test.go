@@ -71,10 +71,11 @@ func TestOrders(t *testing.T) {
 	t.Run("postSymbol401", tests.postOrder401)
 	t.Run("postOrder403", tests.postOrder403)
 	t.Run("postOrder404", tests.postOrder404)
-	t.Run("getSymbol400", tests.getOrder400)
-	t.Run("getSymbol403", tests.getOrder403)
+	t.Run("getOrder400", tests.getOrder400)
+	t.Run("getOrder403", tests.getOrder403)
 	t.Run("getOrder404", tests.getOrder404)
 	t.Run("crudOrder", tests.crudOrder)
+	t.Run("getOrders200", tests.getOrders200)
 }
 
 // postOrder400 validates an order can't be created with the endpoint
@@ -422,6 +423,66 @@ func (ot *OrderTests) getOrder200(t *testing.T, id string) {
 				t.Fatalf("\t%s\tTest %d:\tShould get the expected result. Diff:\n%s", dbtest.Failed, testID, diff)
 			}
 			t.Logf("\t%s\tTest %d:\tShould get the expected result.", dbtest.Success, testID)
+		}
+	}
+}
+
+// getOrders200 validates an order request for a list of orders.
+func (ot *OrderTests) getOrders200(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/v1/orders/1/10", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Given the need to validate getting orders as admin user.")
+	{
+		testID := 0
+
+		r.Header.Set("Authorization", "Bearer "+ot.adminToken)
+		ot.app.ServeHTTP(w, r)
+
+		t.Logf("\tTest %d:\tWhen logged as user admin.", testID)
+		{
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+
+			var got []order.Order
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+
+			if len(got) != 6 {
+				t.Fatalf("\t%s\tTest %d:\tShould get all orders as admin user.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get all orders as admin user.", dbtest.Success, testID)
+		}
+	}
+
+	t.Log("Given the need to validate getting orders as normal user.")
+	{
+		testID := 1
+
+		r.Header.Set("Authorization", "Bearer "+ot.userToken)
+		ot.app.ServeHTTP(w, r)
+
+		t.Logf("\tTest %d:\tWhen logged as normal user.", testID)
+		{
+			if w.Code != http.StatusOK {
+				t.Fatalf("\t%s\tTest %d:\tShould receive a status code of 200 for the response : %v", dbtest.Failed, testID, w.Code)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+
+			var got []order.Order
+			if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to unmarshal the response : %v", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould receive a status code of 200 for the response.", dbtest.Success, testID)
+
+			if len(got) != 5 {
+				t.Fatalf("\t%s\tTest %d:\tShould get only orders for user.", dbtest.Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould get all orders for user.", dbtest.Success, testID)
 		}
 	}
 }

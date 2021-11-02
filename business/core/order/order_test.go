@@ -91,3 +91,66 @@ func TestOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestPagingOrders(t *testing.T) {
+	key, present := os.LookupEnv("MACHINA_BROKER_BINANCE_KEY")
+	if !present {
+		t.Skipf("skipping order tests, environment variable MACHINA_BROKER_BINANCE_KEY is required")
+	}
+
+	secret, present := os.LookupEnv("MACHINA_BROKER_BINANCE_SECRET")
+	if !present {
+		t.Skipf("skipping order tests, environment variable MACHINA_BROKER_BINANCE_KEY is required")
+	}
+
+	log, db, teardown := dbtest.NewUnit(t, c, "testodrs")
+	t.Cleanup(teardown)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	dbschema.Seed(ctx, db)
+
+	core := NewCore(log, db, broker.TestBinance{
+		APIKey: key,
+		Signer: &encode.Hmac{Key: []byte(secret)},
+	})
+
+	t.Log("Given the need to page through Positions records.")
+	{
+		testID := 0
+		t.Logf("\tTest %d:\tWhen paging through 2 positions.", testID)
+		{
+			ctx := context.Background()
+
+			odr1, err := core.Query(ctx, 1, 1)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve orders for page 1 : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve orders for page 1.", dbtest.Success, testID)
+
+			if len(odr1) != 1 {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single orders : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have a single order.", dbtest.Success, testID)
+
+			odr2, err := core.QueryByUser(ctx, 2, 1, "45b5fbd3-755f-4379-8f07-a58d4a30fa2f")
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able to retrieve orders for page 2 : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be able to retrieve orders for page 2.", dbtest.Success, testID)
+
+			if len(odr2) != 1 {
+				t.Fatalf("\t%s\tTest %d:\tShould have a single order : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have a single order.", dbtest.Success, testID)
+
+			if odr1[0].ID == odr2[0].ID {
+				t.Logf("\t\tTest %d:\tPosition1: %v", testID, odr1[0].ID)
+				t.Logf("\t\tTest %d:\tPosition1: %v", testID, odr2[0].ID)
+				t.Fatalf("\t%s\tTest %d:\tShould have different positions : %s.", dbtest.Failed, testID, err)
+			}
+			t.Logf("\t%s\tTest %d:\tShould have different positions.", dbtest.Success, testID)
+		}
+	}
+}

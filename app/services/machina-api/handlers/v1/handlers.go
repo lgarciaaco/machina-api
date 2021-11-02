@@ -84,6 +84,7 @@ func Routes(app *web.App, cfg Config) {
 		Order:    order.NewCore(cfg.Log, cfg.DB, cfg.Broker),
 		Position: position.NewCore(cfg.Log, cfg.DB),
 	}
-	app.Handle(http.MethodPost, version, "/orders", odr.Create, authen)
-	app.Handle(http.MethodGet, version, "/orders/:id", odr.QueryByID, authen)
+	app.Handle(http.MethodGet, version, "/orders/:page/:rows", odr.Query, authen, mid.Cors("*"))
+	app.Handle(http.MethodGet, version, "/orders/:id", odr.QueryByID, authen, mid.Cors("*"))
+	app.Handle(http.MethodPost, version, "/orders", odr.Create, authen, mid.Cors("*"))
 }

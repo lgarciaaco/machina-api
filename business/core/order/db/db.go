@@ -111,6 +111,39 @@ func (s Agent) QueryByID(ctx context.Context, odrID string) (Order, error) {
 	return odr, nil
 }
 
+// QueryByUser gets the specified order from the database.
+func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, usrID string) ([]Order, error) {
+	data := struct {
+		UserID      string `db:"user_id"`
+		Offset      int    `db:"offset"`
+		RowsPerPage int    `db:"rows_per_page"`
+	}{
+		UserID:      usrID,
+		Offset:      (pageNumber - 1) * rowsPerPage,
+		RowsPerPage: rowsPerPage,
+	}
+
+	const q = `
+	SELECT
+		o.*
+	FROM
+		orders AS o
+	LEFT JOIN
+		positions AS p ON p.position_id = o.position_id
+	WHERE 
+		p.user_id = :user_id
+	ORDER BY
+		creation_time
+	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
+
+	var odr []Order
+	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &odr); err != nil {
+		return nil, fmt.Errorf("selecting usrID[%q]: %w", usrID, err)
+	}
+
+	return odr, nil
+}
+
 // QueryByPosition retrieves all order for a given position.
 func (s Agent) QueryByPosition(ctx context.Context, odrID string) ([]Order, error) {
 	data := struct {
