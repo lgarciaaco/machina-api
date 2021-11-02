@@ -67,6 +67,7 @@ func TestOrders(t *testing.T) {
 		adminToken: test.Token("5cf37266-3473-4006-984f-9325122678b7", "gophers"),
 	}
 
+	t.Run("getOrders200", tests.getOrders200)
 	t.Run("postSymbol400", tests.postOrder400)
 	t.Run("postSymbol401", tests.postOrder401)
 	t.Run("postOrder403", tests.postOrder403)
@@ -75,7 +76,6 @@ func TestOrders(t *testing.T) {
 	t.Run("getOrder403", tests.getOrder403)
 	t.Run("getOrder404", tests.getOrder404)
 	t.Run("crudOrder", tests.crudOrder)
-	t.Run("getOrders200", tests.getOrders200)
 }
 
 // postOrder400 validates an order can't be created with the endpoint

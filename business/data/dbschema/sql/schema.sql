@@ -4,6 +4,7 @@ CREATE TABLE users
 (
     user_id       UUID,
     name          TEXT,
+    description   TEXT,
     roles         TEXT [],
     password_hash TEXT,
     date_created  TIMESTAMP,

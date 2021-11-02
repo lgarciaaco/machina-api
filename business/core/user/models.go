@@ -9,17 +9,20 @@ import (
 
 // User represents an individual user.
 type User struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Roles        []string  `json:"roles"`
-	PasswordHash []byte    `json:"-"`
-	DateCreated  time.Time `json:"date_created"`
-	DateUpdated  time.Time `json:"date_updated"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	Roles          []string  `json:"roles"`
+	PasswordHash   []byte    `json:"-"`
+	PositionsTotal int       `json:"positions_total"`
+	DateCreated    time.Time `json:"date_created"`
+	DateUpdated    time.Time `json:"date_updated"`
 }
 
 // NewUser contains information needed to create a new User.
 type NewUser struct {
 	Name            string   `json:"name" validate:"required"`
+	Description     string   `json:"description" validate:"required"`
 	Roles           []string `json:"roles" validate:"required"`
 	Password        string   `json:"password" validate:"required"`
 	PasswordConfirm string   `json:"password_confirm" validate:"eqfield=Password"`
@@ -33,6 +36,7 @@ type NewUser struct {
 // marshalling/unmarshalling.
 type UpdateUser struct {
 	Name            *string  `json:"name"`
+	Description     *string  `json:"description"`
 	Roles           []string `json:"roles"`
 	Password        *string  `json:"password"`
 	PasswordConfirm *string  `json:"password_confirm" validate:"omitempty,eqfield=Password"`
