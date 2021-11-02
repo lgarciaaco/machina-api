@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/lgarciaaco/machina-api/business/core/position"
 
@@ -59,6 +60,42 @@ func (h Handlers) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	return web.Respond(ctx, w, sOdr, http.StatusCreated)
+}
+
+// Query returns an orders.
+func (h Handlers) Query(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	claims, err := auth.GetClaims(ctx)
+	if err != nil {
+		return v1Web.NewRequestError(auth.ErrForbidden, http.StatusForbidden)
+	}
+
+	page := web.Param(r, "page")
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil {
+		return v1Web.NewRequestError(fmt.Errorf("invalid page format, page[%s]", page), http.StatusBadRequest)
+	}
+	rows := web.Param(r, "rows")
+	rowsPerPage, err := strconv.Atoi(rows)
+	if err != nil {
+		return v1Web.NewRequestError(fmt.Errorf("invalid rows format, rows[%s]", rows), http.StatusBadRequest)
+	}
+
+	var ords []order.Order
+
+	// If you are an admin you get a list with positions for all users.
+	if claims.Authorized(auth.RoleAdmin) {
+		ords, err = h.Order.Query(ctx, pageNumber, rowsPerPage)
+		if err != nil {
+			return fmt.Errorf("unable to query for products: %w", err)
+		}
+	} else {
+		ords, err = h.Order.QueryByUser(ctx, pageNumber, rowsPerPage, claims.Subject)
+		if err != nil {
+			return fmt.Errorf("unable to query for products: %w", err)
+		}
+	}
+
+	return web.Respond(ctx, w, ords, http.StatusOK)
 }
 
 // QueryByID returns an order by its ID.

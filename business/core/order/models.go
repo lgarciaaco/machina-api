@@ -32,3 +32,11 @@ func toOrder(dbOdr db.Order) Order {
 	pc := (*Order)(&dbOdr)
 	return *pc
 }
+
+func toOrderSlice(dbOrds []db.Order) []Order {
+	odrs := make([]Order, len(dbOrds))
+	for i, dbPos := range dbOrds {
+		odrs[i] = toOrder(dbPos)
+	}
+	return odrs
+}

@@ -93,3 +93,29 @@ func (c Core) QueryByID(ctx context.Context, odrID string) (Order, error) {
 
 	return toOrder(odr), nil
 }
+
+// Query gets the specified orders.
+func (c Core) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Order, error) {
+	dbOdrs, err := c.dbAgent.Query(ctx, pageNumber, rowsPerPage)
+	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return toOrderSlice(dbOdrs), nil
+}
+
+// QueryByUser gets the specified orders from the database given a userId.
+func (c Core) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int, usrID string) ([]Order, error) {
+	dbOdrs, err := c.dbAgent.QueryByUser(ctx, pageNumber, rowsPerPage, usrID)
+	if err != nil {
+		if errors.Is(err, database.ErrDBNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("query: %w", err)
+	}
+
+	return toOrderSlice(dbOdrs), nil
+}
