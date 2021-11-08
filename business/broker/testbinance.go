@@ -3,6 +3,7 @@ package broker
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -90,4 +91,45 @@ func (as TestBinance) Request(ctx context.Context, method, endpoint string, keys
 
 	// finally, return the reader for the body
 	return r, nil
+}
+
+// Time fetches the api time
+func (as TestBinance) Time(ctx context.Context) (int64, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/%s", TestNet, "time"), nil)
+	if err != nil {
+		return 0, fmt.Errorf("unable to create request %w", err)
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:       MaxIdleConnections,
+			IdleConnTimeout:    IdleConnTimeout,
+			DisableCompression: true,
+		}}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to issue request, err %w", err)
+	}
+	defer resp.Body.Close()
+
+	// we care only about status codes in 2xx range, anything else we can't process
+	if !(resp.StatusCode >= 200 && resp.StatusCode <= 299) {
+		return 0, fmt.Errorf("status code [%d] out of range, expecting 200 <= status code <= 299", resp.StatusCode)
+	}
+
+	type time struct {
+		Time int64 `json:"serverTime"`
+	}
+	var t time
+
+	// finally, return the body
+	if b, err := ioutil.ReadAll(resp.Body); err != nil {
+		return 0, fmt.Errorf("unable to read from response")
+	} else {
+		if err = json.Unmarshal(b, &t); err != nil {
+			return 0, fmt.Errorf("unable to unmarshal reposns %s into json", b)
+		}
+	}
+
+	return t.Time, nil
 }
