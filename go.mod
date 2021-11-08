@@ -20,7 +20,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.7.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.25.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.26.1
 	go.opentelemetry.io/otel v1.1.0
 	go.opentelemetry.io/otel/exporters/zipkin v1.1.0
 	go.opentelemetry.io/otel/sdk v1.1.0
@@ -49,7 +49,7 @@ require (
 	go.opentelemetry.io/otel/metric v0.24.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359 // indirect
+	golang.org/x/sys v0.0.0-20211107104306-e0b2ad06fe42 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

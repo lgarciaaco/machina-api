@@ -109,7 +109,7 @@ github.com/spf13/pflag
 # github.com/stretchr/testify v1.7.0
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
-# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.25.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.26.1
 ## explicit; go 1.15
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 # go.opentelemetry.io/otel v1.1.0
@@ -171,7 +171,7 @@ go.uber.org/zap/zapcore
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/sha3
-# golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359
+# golang.org/x/sys v0.0.0-20211107104306-e0b2ad06fe42
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
