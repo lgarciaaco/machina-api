@@ -9,6 +9,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/lgarciaaco/machina-api/business/broker/encode"
 )
 
@@ -22,6 +25,10 @@ type TestBinance struct {
 // Request convert a bunch of key-value pairs into an url query, it takes the api endpoint
 // and builds the binance api request. It returns the body of the response
 func (as TestBinance) Request(ctx context.Context, method, endpoint string, keysAndValues ...string) (rd io.Reader, err error) {
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "broker.binance.request")
+	span.SetAttributes(attribute.String("endpoint", endpoint))
+	defer span.End()
+
 	base := APIV3
 	if endpoint == "order" {
 		base = TestNet
