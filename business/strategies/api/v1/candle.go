@@ -11,7 +11,7 @@ import (
 // Candle Candlestick charts are used by traders to determine possible price movement based on past patterns.
 type Candle struct {
 	ID         string    `json:"id"`
-	SymbolID   string    `json:"-"`
+	SymbolID   string    `json:"symbol_id"`
 	Symbol     string    `json:"symbol"`
 	Interval   string    `json:"interval"`
 	OpenTime   time.Time `json:"open_time"`

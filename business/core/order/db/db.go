@@ -76,7 +76,7 @@ func (s Agent) Query(ctx context.Context, pageNumber int, rowsPerPage int) ([]Or
 	FROM
 		orders
 	ORDER BY
-		creation_time
+		creation_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var odrs []Order
@@ -133,7 +133,7 @@ func (s Agent) QueryByUser(ctx context.Context, pageNumber int, rowsPerPage int,
 	WHERE 
 		p.user_id = :user_id
 	ORDER BY
-		creation_time
+		creation_time DESC
 	OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY`
 
 	var odr []Order
@@ -160,7 +160,7 @@ func (s Agent) QueryByPosition(ctx context.Context, odrID string) ([]Order, erro
 	WHERE 
 		position_id = :position_id
 	ORDER BY
-		creation_time`
+		creation_time DESC`
 
 	var ords []Order
 	if err := database.NamedQuerySlice(ctx, s.log, s.db, q, data, &ords); err != nil {

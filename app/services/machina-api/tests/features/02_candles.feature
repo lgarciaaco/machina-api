@@ -20,6 +20,7 @@ Feature: Candles api
         "low": 398.6,
         "open_price": 200.5,
         "open_time": "${response[0].open_time}",
+        "symbol_id": "125240c0-7f7f-4d0f-b30d-939fd93cf027",
         "symbol": "ETHUSDT",
         "volume": 33456
       },
@@ -32,6 +33,7 @@ Feature: Candles api
         "low": 198.6,
         "open_price": 200.5,
         "open_time": "${response[1].open_time}",
+        "symbol_id": "125240c0-7f7f-4d0f-b30d-939fd93cf027",
         "symbol": "ETHUSDT",
         "volume": 23456
       },
@@ -44,6 +46,7 @@ Feature: Candles api
         "low": 98.6,
         "open_price": 100.5,
         "open_time": "${response[2].open_time}",
+        "symbol_id": "125240c0-7f7f-4d0f-b30d-939fd93cf027",
         "symbol": "ETHUSDT",
         "volume": 13456
       }
@@ -64,6 +67,7 @@ Feature: Candles api
         "low": 398.6,
         "open_price": 200.5,
         "open_time": "${response[0].open_time}",
+        "symbol_id": "125240c0-7f7f-4d0f-b30d-939fd93cf027",
         "symbol": "ETHUSDT",
         "volume": 33456
       }
@@ -83,6 +87,7 @@ Feature: Candles api
       "low": 398.6,
       "open_price": 200.5,
       "open_time": "${response.open_time}",
+      "symbol_id": "125240c0-7f7f-4d0f-b30d-939fd93cf027",
       "symbol": "ETHUSDT",
       "volume": 33456
     }
