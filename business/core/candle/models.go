@@ -9,7 +9,7 @@ import (
 // Candle represents an individual candle
 type Candle struct {
 	ID         string    `json:"id"`
-	SymbolID   string    `json:"-"`
+	SymbolID   string    `json:"symbol_id"`
 	Symbol     string    `json:"symbol"`
 	Interval   string    `json:"interval"`
 	OpenTime   time.Time `json:"open_time"`
