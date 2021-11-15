@@ -1,4 +1,5 @@
 resources:
+  - ./deployment-bnbusdt-1m.yaml
   - ./deployment-bnbusdt-1h.yaml
   - ./deployment-bnbusdt-4h.yaml
 commonLabels:

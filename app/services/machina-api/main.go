@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/lgarciaaco/machina-api/app/services/machina-api/sync"
 	"github.com/lgarciaaco/machina-api/business/core/candle"
 	"github.com/lgarciaaco/machina-api/business/core/symbol"
@@ -46,7 +48,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("MACHINA_API")
+	log, err := logger.New("MACHINA_API", zapcore.InfoLevel)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -190,10 +192,9 @@ func run(log *zap.SugaredLogger) error {
 	// Sync support
 	sCtx, sCancel := context.WithCancel(context.Background())
 	synchronizer := sync.CandleSynchronizer{
-		Log:        log,
-		Symbol:     symbol.NewCore(log, db, broker),
-		Candle:     candle.NewCore(log, db, broker),
-		SyncPeriod: 5 * time.Minute,
+		Log:    log,
+		Symbol: symbol.NewCore(log, db, broker),
+		Candle: candle.NewCore(log, db, broker),
 	}
 	synchronizer.Run(sCtx)
 	defer func() {

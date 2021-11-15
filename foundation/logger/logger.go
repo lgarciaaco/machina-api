@@ -9,8 +9,9 @@ import (
 
 // New constructs a Sugared Logger that writes to stdout and
 // provides human readable timestamps.
-func New(service string) (*zap.SugaredLogger, error) {
+func New(service string, level zapcore.Level) (*zap.SugaredLogger, error) {
 	config := zap.NewProductionConfig()
+	config.Level = zap.NewAtomicLevelAt(level)
 	config.OutputPaths = []string{"stdout"}
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.DisableStacktrace = true

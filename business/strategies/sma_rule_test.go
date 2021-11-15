@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"testing"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/lgarciaaco/machina-api/foundation/logger"
 
 	"github.com/lgarciaaco/machina-api/business/strategies/financial"
@@ -17,7 +19,7 @@ import (
 // Test by running the strategy, looking at the results and visually making sure
 // they make sense.
 func TestMovingAverageStrategy_Run(t *testing.T) {
-	log, err := logger.New("TEST")
+	log, err := logger.New("TEST", zapcore.ErrorLevel)
 	if err != nil {
 		t.Fatal("unable to create logger")
 	}

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/ardanlabs/conf/v2"
 	"github.com/lgarciaaco/machina-api/app/tooling/machina-admin/commands"
 	"github.com/lgarciaaco/machina-api/business/sys/database"
@@ -19,7 +21,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("ADMIN")
+	log, err := logger.New("ADMIN", zapcore.InfoLevel)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

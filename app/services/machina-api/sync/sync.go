@@ -21,6 +21,7 @@ type Synchronizer interface {
 }
 
 var (
+	// intervals are all intervals the sync pulls candles. Keep this slice ordered
 	intervals       = []time.Duration{time.Minute, 5 * time.Minute, time.Hour, 2 * time.Hour, 4 * time.Hour}
 	intervalsString = map[time.Duration]string{
 		time.Minute: "1m", 5 * time.Minute: "5m", 10 * time.Minute: "10m", 15 * time.Minute: "15m",
@@ -30,17 +31,16 @@ var (
 
 // CandleSynchronizer synchronizes candles between binance api and the system
 type CandleSynchronizer struct {
-	Log        *zap.SugaredLogger
-	Symbol     symbol.Core
-	Candle     candle.Core
-	SyncPeriod time.Duration
+	Log    *zap.SugaredLogger
+	Symbol symbol.Core
+	Candle candle.Core
 }
 
 // Run pulls candles from binance api and inserts them into the system
 func (b *CandleSynchronizer) Run(ctx context.Context) {
 	// Start synchronizing for all symbols
 	go func() {
-		ticker := time.NewTicker(b.SyncPeriod)
+		ticker := time.NewTicker(intervals[0])
 		defer ticker.Stop()
 
 		for {
@@ -53,7 +53,7 @@ func (b *CandleSynchronizer) Run(ctx context.Context) {
 				func() {
 					// In case this thread blocks, we want to release it before the next iteration
 					// kicks in
-					ctx, cancel := context.WithTimeout(ctx, b.SyncPeriod-b.SyncPeriod/10)
+					ctx, cancel := context.WithTimeout(ctx, intervals[0]-intervals[0]/10)
 					defer cancel()
 
 					if err := b.sync(ctx); err != nil {
