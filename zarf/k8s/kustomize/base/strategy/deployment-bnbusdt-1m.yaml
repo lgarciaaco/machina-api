@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bnbusdt-1m
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: machina-strategy
+      name: bnbusdt-1m
+  template:
+    metadata:
+      name: bnbusdt-1m
+      labels:
+        app: machina-strategy
+        name: bnbusdt-1m
+    spec:
+      containers:
+      - name: metrics
+        image: lgarciaac/machina-metrics:1.0-arm64
+        ports:
+          - name: metrics
+            containerPort: 3001
+          - name: metrics-debug
+            containerPort: 4001
+      - name: machina-strategy
+        image: lgarciaac/machina-strategy:1.0-arm64
+        imagePullPolicy: Always
+        env:
+          - name: STRATEGY_MA_ZIPKIN_REPORTER_URI
+            value: "http://zipkin-service:9411/api/v2/spans"
+          - name: STRATEGY_MA_API_USERNAME
+            value: "d29b4b23-c003-4519-b3af-051b9c9b3c5a"
+          - name: STRATEGY_MA_API_PASSWORD
+            value: "gophers"
+          - name: STRATEGY_MA_API_ENDPOINT
+            value: "http://api-service"
+          - name: STRATEGY_MA_API_STRATEGY_TRADING_PAIR
+            value: "97514fb4-4ff5-4561-91d1-c8da711d8f32"
+          - name: STRATEGY_MA_API_STRATEGY_TRADING_PAIR
+            value: "1m"
+        ports:
+          - name: api-debug
+            containerPort: 4000
+        readinessProbe: # readiness probes mark the service available to accept traffic.
+          httpGet:
+            path: /debug/readiness
+            port: api-debug
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+          httpGet:
+            path: /debug/liveness
+            port: api-debug
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        resources:
+          limits:
+            memory: "200M"
+            cpu: "500m"
+          requests:
+            memory: "100M"
+            cpu: "200m"

@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/ardanlabs/conf/v2"
 	"github.com/lgarciaaco/machina-api/app/services/metrics/collector"
 	"github.com/lgarciaaco/machina-api/app/services/metrics/publisher"
@@ -27,7 +29,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("METRICS")
+	log, err := logger.New("METRICS", zapcore.ErrorLevel)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -74,7 +76,6 @@ func run(log *zap.SugaredLogger) error {
 			From string `conf:"default:http://localhost:4000/debug/vars"`
 		}
 		Publish struct {
-			To       string        `conf:"default:console"`
 			Interval time.Duration `conf:"default:5s"`
 		}
 	}{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/lgarciaaco/machina-api/business/core/candle"
 	"github.com/lgarciaaco/machina-api/business/core/symbol"
@@ -33,10 +32,9 @@ func TestSync(t *testing.T) {
 	t.Cleanup(teardown)
 
 	candleSync := CandleSynchronizer{
-		Log:        log,
-		Symbol:     symbol.NewCore(log, db, broker.TestBinance{}),
-		Candle:     candle.NewCore(log, db, broker.TestBinance{}),
-		SyncPeriod: time.Second,
+		Log:    log,
+		Symbol: symbol.NewCore(log, db, broker.TestBinance{}),
+		Candle: candle.NewCore(log, db, broker.TestBinance{}),
 	}
 
 	candleCore := candle.NewCore(log, db, broker.TestBinance{})

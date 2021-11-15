@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/lgarciaaco/machina-api/foundation/test/cucumber"
 
 	"github.com/lgarciaaco/machina-api/business/data/dbschema"
@@ -28,7 +30,7 @@ Need to figure out timeouts for http service.
 */
 
 func Test_integration(t *testing.T) {
-	log, err := logger.New("MACHINA-API")
+	log, err := logger.New("MACHINA-API", zapcore.ErrorLevel)
 	if err != nil {
 		t.Fatal("unable to initialize logger")
 	}

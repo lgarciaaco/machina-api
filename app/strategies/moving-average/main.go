@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/lgarciaaco/machina-api/app/strategies/moving-average/handlers"
 
 	"github.com/lgarciaaco/machina-api/business/strategies"
@@ -43,7 +45,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("MACHINA_STRATEGY")
+	log, err := logger.New("MACHINA_STRATEGY", zapcore.InfoLevel)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -77,7 +79,7 @@ func run(log *zap.SugaredLogger) error {
 		conf.Version
 		Strategy struct {
 			TradingPair   string  `conf:"default:97514fb4-4ff5-4561-91d1-c8da711d8f32,trading par for this strategy"`
-			Interval      string  `conf:"default:1h,candle range"`
+			Interval      string  `conf:"default:5m,candle range"`
 			Base          float64 `conf:"default:0.2,base coin this strategy will trade on"`
 			Alt           float64 `conf:"default:500,alt coin this strategy will trade on"`
 			Lot           float64 `conf:"default:0.1,lot to open orders per position"`
@@ -91,7 +93,7 @@ func run(log *zap.SugaredLogger) error {
 		API struct {
 			Username string `conf:"noprint,required"`
 			Password string `conf:"noprint,required"`
-			Endpoint string `conf:"default:http://localhost:3000"`
+			Endpoint string `conf:"default:http://machina-trader.local"`
 		}
 		Zipkin struct {
 			ReporterURI string  `conf:"default:http://localhost:9411/api/v2/spans"`
@@ -184,9 +186,13 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	// Puller
+	pInterval, err := time.ParseDuration(cfg.Strategy.Interval)
+	if err != nil {
+		log.Errorw("determining duration", "err", err)
+	}
 	puller := strategies.FromAPI{
 		Log:          log,
-		PullInterval: 10 * time.Second,
+		PullInterval: pInterval,
 		TradingPair: strategies.TradingPair{
 			Interval: cfg.Strategy.Interval,
 			Symbol:   cfg.Strategy.TradingPair,

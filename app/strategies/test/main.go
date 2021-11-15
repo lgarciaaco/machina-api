@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"syscall"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/lgarciaaco/machina-api/business/strategies"
 	v1 "github.com/lgarciaaco/machina-api/business/strategies/api/v1"
 
@@ -39,7 +41,7 @@ var build = "develop"
 func main() {
 
 	// Construct the application logger.
-	log, err := logger.New("MACHINA_STRATEGY")
+	log, err := logger.New("MACHINA_STRATEGY", zapcore.ErrorLevel)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
